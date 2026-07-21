@@ -1,0 +1,5 @@
+__pycache__/
+*.pyc
+.streamlit/secrets.toml
+*_업데이트.xlsx
+.DS_Store
