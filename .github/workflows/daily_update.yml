@@ -2,9 +2,13 @@ name: Daily APEX/SpaceX data update
 
 'on':
   schedule:
-    # 매일 한국시간(KST, UTC+9) 오전 7시 = UTC 전일 22시.
-    # 미국 증시 마감(현지 종가) 이후 + 서울외국환중개 매매기준율 고시 이후 시각으로 설정.
-    - cron: "0 22 * * *"
+    # 영업일(월~금, 한국시간 KST=UTC+9) 매일 아침 8시 40분에 실행.
+    # KST 08:40 = UTC 전일 23:40. cron의 day-of-week는 UTC 기준이므로
+    # UTC 일~목(0-4) 23:40 에 걸어야 KST 월~금 08:40 에 해당합니다.
+    # GitHub Actions cron은 공휴일을 인식하지 못하므로, 국내 공휴일이 평일과 겹치는 날에는
+    # 그냥 실행되되 시장이 열리지 않아 새 데이터가 없으면 raw CSV에 아무 것도 추가되지 않고
+    # (build_daily_log()도 변화가 없어) 커밋 없이 조용히 종료됩니다 - 데이터 오염 없음.
+    - cron: "40 23 * * 0-4"
   workflow_dispatch: {}   # Actions 탭에서 수동 실행 버튼도 사용 가능
 
 permissions:

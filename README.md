@@ -77,7 +77,10 @@ git push -u origin main
 
 ### 2단계. GitHub Actions 자동수집 켜기
 - 저장소를 올리면 `.github/workflows/daily_update.yml` 이 자동으로 인식되어,
-  **매일 UTC 22:00(한국시간 오전 7시)** 에 자동 실행됩니다.
+  **영업일(월~금) 매일 한국시간(KST) 오전 8시 40분**에 자동 실행됩니다
+  (cron `40 23 * * 0-4`, UTC 기준 일~목 23:40). GitHub Actions cron은 공휴일을 인식하지
+  못하므로 국내 공휴일이 평일과 겹치는 날에도 실행은 되지만, 그날은 시장이 열리지 않아
+  새 데이터가 없으면 raw CSV에 아무 것도 추가되지 않고 커밋 없이 조용히 종료됩니다.
 - 바로 테스트해보려면 GitHub 저장소 페이지 → **Actions** 탭 → `Daily APEX/SpaceX data update`
   → **Run workflow** 버튼으로 즉시 1회 실행해볼 수 있습니다.
 - 실행 후 `data/raw_spcx_price.csv`, `data/raw_fx_bok.csv`, `data/daily_log.csv`에 새 행이
