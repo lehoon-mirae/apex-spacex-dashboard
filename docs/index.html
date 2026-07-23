@@ -2,341 +2,238 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>미래생명 · APEX 펀드(SpaceX) 손익 대시보드</title>
-<script src="https://cdn.plot.ly/plotly-2.35.2.min.js" charset="utf-8"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js" integrity="sha384-iU8HYtnGQ8Cy4zl7gbNMOhsDTTKX02BTXptVP/vqAWIaTfM7isw76iyZCsjL2eVi" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/gridjs@5.0.2/dist/gridjs.umd.js" integrity="sha384-/XXDzxe4FsGiAe50i/u9pY/Vy/uX654MHB1xoc1BJNnH1WXHhqHga9g3q5tF4gj7" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gridjs@5.0.2/dist/theme/mermaid.min.css" integrity="sha384-jZvDSsmGB9oGGT/4l9bHXGoAv1OxvG/cFmSo0dZaSqmBgvQTKDBFAMftlXTmMbNW" crossorigin="anonymous">
 <style>
   :root { color-scheme: light; }
   * { box-sizing: border-box; }
   body {
-    margin: 0; padding: 28px 32px 60px; background: #ffffff; color: #262730;
-    font-family: "Source Sans Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", "Malgun Gothic", sans-serif;
-    max-width: 1400px; margin-left: auto; margin-right: auto;
+    margin: 0; padding: 24px; background: #f7f7f8; color: #1a1a1a;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Malgun Gothic", sans-serif;
   }
-  h1 { font-size: 28px; margin: 4px 0 6px; }
-  .caption { color: #6b6b6b; font-size: 14px; margin-bottom: 18px; }
-  hr { border: none; border-top: 1px solid #e6e6e6; margin: 26px 0; }
-  h2.subheader { font-size: 21px; margin: 0 0 16px; }
-  h4 { font-size: 15px; margin: 18px 0 10px; color: #31333f; }
-  h5 { font-size: 13px; margin: 4px 0 8px; color: #454756; }
-  .cols { display: grid; gap: 20px; }
-  .cols-2 { grid-template-columns: 1fr 1fr; }
-  .cols-2-3 { grid-template-columns: 4fr 3fr; }
-  .cols-3-4 { grid-template-columns: 3fr 4fr; }
-  @media (max-width: 900px) { .cols-2, .cols-2-3, .cols-3-4 { grid-template-columns: 1fr; } }
-  .metric-row { display: flex; gap: 28px; flex-wrap: wrap; margin: 8px 0 4px; }
-  .metric { min-width: 170px; }
-  .metric-label { font-size: 13px; color: #6b6b6b; }
-  .metric-value { font-size: 26px; font-weight: 600; margin-top: 2px; }
-  .metric-delta { font-size: 13px; margin-top: 2px; }
-  .metric-delta.up { color: #c62828; }
-  .metric-delta.down { color: #1565c0; }
-  .plot { width: 100%; height: 350px; }
-  .plot-sm { width: 100%; height: 280px; }
-  table.status { width: 100%; border-collapse: collapse; font-size: 14px; }
-  table.status th, table.status td { padding: 8px 10px; text-align: left; border-bottom: 1px solid #f0f0f0; }
-  table.status th { color: #6b6b6b; font-weight: 600; font-size: 13px; }
-  table.datatable { width: 100%; border-collapse: collapse; font-size: 13px; }
-  table.datatable th, table.datatable td { padding: 6px 9px; text-align: right; border-bottom: 1px solid #f0f0f0; white-space: nowrap; }
-  table.datatable th:first-child, table.datatable td:first-child { text-align: left; }
-  .table-scroll { overflow-x: auto; max-height: 460px; overflow-y: auto; border: 1px solid #eee; border-radius: 6px; }
-  .slider-row { display: grid; grid-template-columns: 3fr 1fr; gap: 16px; align-items: center; margin-bottom: 14px; }
-  .slider-row label { font-size: 13px; color: #454756; display: block; margin-bottom: 4px; }
-  input[type=range] { width: 100%; }
-  input[type=number] { width: 100%; padding: 6px 8px; border: 1px solid #d5d5d8; border-radius: 6px; font-size: 14px; }
-  details { border: 1px solid #eee; border-radius: 8px; padding: 10px 14px; margin-top: 14px; }
-  summary { cursor: pointer; font-size: 14px; color: #31333f; }
-  details p, details li { font-size: 13.5px; line-height: 1.7; color: #31333f; }
-  .caption-sm { font-size: 12.5px; color: #6b6b6b; margin-top: 8px; line-height: 1.6; }
-  footer { font-size: 12px; color: #8a8a8a; margin-top: 12px; line-height: 1.7; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  .subtitle { color: #6b6b6b; font-size: 13px; margin-bottom: 20px; }
+  .kpi-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 12px; margin-bottom: 24px;
+  }
+  .kpi-card {
+    background: #fff; border: 1px solid #e5e5e5; border-radius: 10px; padding: 14px 16px;
+  }
+  .kpi-label { font-size: 12px; color: #6b6b6b; margin-bottom: 6px; }
+  .kpi-value { font-size: 20px; font-weight: 600; }
+  .kpi-sub { font-size: 12px; margin-top: 4px; }
+  .pos { color: #c62828; }
+  .neg { color: #1565c0; }
+  .section {
+    background: #fff; border: 1px solid #e5e5e5; border-radius: 10px; padding: 18px;
+    margin-bottom: 20px;
+  }
+  .section h2 { font-size: 15px; margin: 0 0 12px; }
+  .chart-wrap { position: relative; height: 280px; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  @media (max-width: 900px) { .two-col { grid-template-columns: 1fr; } }
+  .note { font-size: 12px; color: #6b6b6b; line-height: 1.6; margin-top: 10px; }
+  .scenario-controls { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+  .scenario-controls input[type=range] { flex: 1; }
+  .scenario-readout { font-size: 13px; font-weight: 600; min-width: 210px; text-align: right; }
+  table.compact { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table.compact th, table.compact td { padding: 6px 8px; text-align: right; border-bottom: 1px solid #f0f0f0; }
+  table.compact th:first-child, table.compact td:first-child { text-align: left; }
+  .gridjs-wrapper { font-size: 13px; }
+  footer { font-size: 12px; color: #8a8a8a; margin-top: 8px; line-height: 1.7; }
 </style>
 </head>
 <body>
 
-<h1>미래생명 · APEX 펀드(SpaceX) 손익 대시보드</h1>
-<div class="caption" id="topCaption"></div>
-<hr>
+<h1>🚀 미래생명 · APEX 펀드(SpaceX) 손익 대시보드</h1>
+<div class="subtitle" id="subtitle"></div>
 
-<!-- 1. 주가 추이 -->
-<h2 class="subheader">📈 1. 주가 추이 (SpaceX 주가 및 환율 변동 추이)</h2>
-<div class="cols cols-2">
-  <div><h4>SpaceX 주가 (USD)</h4><div class="plot" id="plotPrice"></div></div>
-  <div><h4>USD/KRW 환율</h4><div class="plot" id="plotFx"></div></div>
-</div>
-<hr>
+<div class="kpi-grid" id="kpiGrid"></div>
 
-<!-- 2. 손익 현황 -->
-<h2 class="subheader">💰 2. 손익 현황 (최신 현황 및 시나리오)</h2>
-<h4>[최신 시장 지표]</h4>
-<div class="metric-row" id="marketMetrics"></div>
-
-<h4>[최신 손익 현황 요약 및 요인분해]</h4>
-<div class="cols cols-2-3">
-  <div id="statusTableWrap"></div>
-  <div class="plot-sm" id="plotWaterfall"></div>
+<div class="section">
+  <h2>📈 SpaceX 종가 &amp; USD/KRW 매매기준율 추이</h2>
+  <div class="two-col">
+    <div class="chart-wrap"><canvas id="priceChart"></canvas></div>
+    <div class="chart-wrap"><canvas id="fxChart"></canvas></div>
+  </div>
 </div>
 
-<h4>[🔮 시나리오 시뮬레이터 (슬라이더 조절 &amp; 직접 입력)]</h4>
-<div class="slider-row">
-  <div><label>SpaceX 주가 (USD) 슬라이더</label><input type="range" id="priceSlider" min="20" max="400" step="0.1"></div>
-  <div><label>주가 직접 입력 (USD)</label><input type="number" id="priceInput" min="20" max="400" step="0.1"></div>
+<div class="section">
+  <h2>💰 미래생명 평가손익 추이 (원화, 주가효과/환율효과 분해)</h2>
+  <div class="chart-wrap"><canvas id="gainChart"></canvas></div>
+  <div class="note">주가상승효과 = (평가금액USD − 투자원가USD) × 취득환율(1,519.8원 고정) · 외화환산손익 = 평가금액USD × (당일환율 − 취득환율). 두 효과의 합은 항상 총 평가손익과 정확히 일치합니다.</div>
 </div>
-<div class="slider-row">
-  <div><label>USD/KRW 환율 (원) 슬라이더</label><input type="range" id="fxSlider" min="1200" max="1800" step="1"></div>
-  <div><label>환율 직접 입력 (원)</label><input type="number" id="fxInput" min="1200" max="1800" step="1"></div>
-</div>
-<div class="metric-row" id="scenarioMetrics"></div>
-<div class="caption-sm" id="scenarioCaption"></div>
 
-<details>
-  <summary>참고: 2026-06-30 공식(NAV·기준가 기준) 스냅샷과의 차이</summary>
-  <div id="navCompare"></div>
-</details>
-<hr>
+<div class="section">
+  <h2>🎛️ 시나리오: SpaceX 주가 등락률에 따른 손익 시뮬레이션</h2>
+  <div class="scenario-controls">
+    <span>공모가($135) 대비</span>
+    <input type="range" id="scenarioSlider" min="-50" max="100" step="1" value="0">
+    <span class="scenario-readout" id="scenarioReadout"></span>
+  </div>
+  <table class="compact" id="scenarioTable"></table>
+  <div class="note">환율은 최신 daily_log 기준값으로 고정하고 주가 변동 효과만 분리해서 봅니다. 슬라이더는 이 브라우저 안에서 즉시 재계산되며 별도 서버 호출이 없습니다.</div>
+</div>
 
-<!-- 3. 손익 추이 -->
-<h2 class="subheader">📊 3. 손익 추이 (일별 추이 및 월별 손익 내역)</h2>
-<h4>[일별 손익 추이]</h4>
-<div class="cols cols-2">
-  <div><h5>평가손익 추이 (억원)</h5><div class="plot" id="plotGain"></div></div>
-  <div><h5>요인분해 누적 기여도 (억원)</h5><div class="plot" id="plotFactor"></div></div>
+<div class="section">
+  <h2>📋 일별 손익 데이터 (파생: raw_spcx_price.csv × raw_fx_bok.csv 조인)</h2>
+  <div id="dailyGrid"></div>
 </div>
-<h4>[월별 손익 내역]</h4>
-<div class="cols cols-3-4">
-  <div><h5>월간 손익 변동 추이 (전월비, 억원)</h5><div class="plot-sm" id="plotMonthly"></div></div>
-  <div><h5>월별 요약 테이블</h5><div class="table-scroll" id="monthlyTableWrap"></div></div>
-</div>
-<hr>
 
-<!-- 4. 기초데이터 -->
-<h2 class="subheader">📋 4. 기초데이터 (일별 로그 데이터 및 지표 상세)</h2>
-<div class="table-scroll" id="dailyTableWrap"></div>
-<div class="caption-sm">
-  데이터 출처: SpaceX(SPCX) 종가는 Yahoo Finance(stooq 폴백), USD/KRW 매매기준율은 한국은행 ECOS 공개API(731Y001)에서 매일 자동 수집됩니다 (GitHub Actions, fetch_daily_data.py).
-  서울외국환중개(smbs.biz)는 이용약관상 자동 수집을 금지하고 있어 제외했습니다.
-</div>
-<hr>
-
-<!-- 5. Raw 데이터 -->
-<h2 class="subheader">📦 5. Raw 데이터 (수집 원자료 시계열)</h2>
-<div class="caption-sm" style="margin-bottom:14px">
-  raw_spcx_price.csv / raw_fx_bok.csv는 append-only 원자료이며, 위 4.기초데이터(daily_log.csv)는 두 원자료를 날짜로 조인해 매번 다시 계산한 파생 데이터입니다.
-</div>
-<div class="cols cols-2">
-  <div><h5>SpaceX 종가 (raw_spcx_price.csv)</h5><div class="table-scroll" id="rawSpcxWrap" style="max-height:320px"></div></div>
-  <div><h5>USD/KRW 매매기준율 (raw_fx_bok.csv)</h5><div class="table-scroll" id="rawFxWrap" style="max-height:320px"></div></div>
+<div class="section">
+  <h2>📦 Raw 원자료</h2>
+  <div class="two-col">
+    <div>
+      <div class="note" style="margin-top:0">SpaceX 종가 (raw_spcx_price.csv)</div>
+      <div id="rawSpcxGrid"></div>
+    </div>
+    <div>
+      <div class="note" style="margin-top:0">USD/KRW 매매기준율 (raw_fx_bok.csv, 한국은행 ECOS)</div>
+      <div id="rawFxGrid"></div>
+    </div>
+  </div>
 </div>
 
 <footer id="footer"></footer>
 
 <script>
-const DATA = {"generated_at": "2026-07-21 15:11", "constants": {"shares": 575111.2099619086, "ipo_price": 135.0, "acq_fx": 1519.8, "fund_shares": 2486250, "mirae_pct": 0.2313167259776045, "official_date": "2026-06-30", "official_cost_krw": 124231573148, "official_value_krw": 157295557878, "official_gain_krw": 33063984730, "official_fx": 1549.4, "official_price": 170.86}, "daily": [{"date": "2026-06-12", "spcx_price_usd": "160.95", "fx_rate": "1527.0", "pct_vs_ipo": "0.192222", "value_usd": "92564149.24", "value_krw": "141345455895.0", "cost_usd": "77640013.34", "cost_krw": "117997292282.0", "gain_usd": "14924135.9", "gain_krw": "23348163613.0", "return_usd": "0.192222", "return_krw": "0.19787", "price_effect_krw": "22681701739.0", "fx_effect_krw": "666461875.0", "source": "auto"}, {"date": "2026-06-15", "spcx_price_usd": "192.5", "fx_rate": "1520.4", "pct_vs_ipo": "0.425926", "value_usd": "110708907.92", "value_krw": "168321823598.0", "cost_usd": "77640013.34", "cost_krw": "117997292282.0", "gain_usd": "33068894.57", "gain_krw": "50324531317.0", "return_usd": "0.425926", "return_krw": "0.426489", "price_effect_krw": "50258105972.0", "fx_effect_krw": "66425345.0", "source": "auto"}, {"date": "2026-06-16", "spcx_price_usd": "201.8", "fx_rate": "1510.0", "pct_vs_ipo": "0.494815", "value_usd": "116057442.17", "value_krw": "175246737677.0", "cost_usd": "77640013.34", "cost_krw": "117997292282.0", "gain_usd": "38417428.83", "gain_krw": "57249445396.0", "return_usd": "0.494815", "return_krw": "0.485176", "price_effect_krw": "58386808329.0", "fx_effect_krw": "-1137362933.0", "source": "auto"}, {"date": "2026-06-17", "spcx_price_usd": "191.82", "fx_rate": "1513.5", "pct_vs_ipo": "0.420889", "value_usd": "110317832.29", "value_krw": "166966039178.0", "cost_usd": "77640013.34", "cost_krw": "117997292282.0", "gain_usd": "32677818.95", "gain_krw": "48968746897.0", "return_usd": "0.420889", "return_krw": "0.414999", "price_effect_krw": "49663749240.0", "fx_effect_krw": "-695002343.0", "source": "auto"}, {"date": "2026-06-18", "spcx_price_usd": "185.0", "fx_rate": "1512.8", "pct_vs_ipo": "0.37037", "value_usd": "106395573.84", "value_krw": "160955224110.0", "cost_usd": "77640013.34", "cost_krw": "117997292282.0", "gain_usd": "28755560.5", "gain_krw": "42957931828.0", "return_usd": "0.37037", "return_krw": "0.364059", "price_effect_krw": "43702700845.0", "fx_effect_krw": "-744769017.0", "source": "auto"}, {"date": "2026-06-22", "spcx_price_usd": "154.6", "fx_rate": "1535.0", "pct_vs_ipo": "0.145185", "value_usd": "88912193.06", "value_krw": "136480216347.0", "cost_usd": "77640013.34", "cost_krw": "117997292282.0", "gain_usd": "11272179.72", "gain_krw": "18482924066.0", "return_usd": "0.145185", "return_krw": "0.156639", "price_effect_krw": "17131458731.0", "fx_effect_krw": "1351465335.0", "source": "auto"}, {"date": "2026-06-23", "spcx_price_usd": "156.11", "fx_rate": "1535.7", "pct_vs_ipo": "0.15637", "value_usd": "89780610.99", "value_krw": "137876084293.0", "cost_usd": "77640013.34", "cost_krw": "117997292282.0", "gain_usd": "12140597.64", "gain_krw": "19878792011.0", "return_usd": "0.15637", "return_krw": "0.168468", "price_effect_krw": "18451280297.0", "fx_effect_krw": "1427511715.0", "source": "auto"}, {"date": "2026-06-24", "spcx_price_usd": "154.54", "fx_rate": "1537.2", "pct_vs_ipo": "0.144741", "value_usd": "88877686.39", "value_krw": "136622779515.0", "cost_usd": "77640013.34", "cost_krw": "117997292282.0", "gain_usd": "11237673.04", "gain_krw": "18625487233.0", "return_usd": "0.144741", "return_krw": "0.157847", "price_effect_krw": "17079015490.0", "fx_effect_krw": "1546471743.0", "source": "auto"}, {"date": "2026-06-25", "spcx_price_usd": "153.0", "fx_rate": "1538.3", "pct_vs_ipo": "0.133333", "value_usd": "87992015.12", "value_krw": "135358116866.0", "cost_usd": "77640013.34", "cost_krw": "117997292282.0", "gain_usd": "10352001.78", "gain_krw": "17360824584.0", "return_usd": "0.133333", "return_krw": "0.147129", "price_effect_krw": "15732972304.0", "fx_effect_krw": "1627852280.0", "source": "auto"}, {"date": "2026-06-26", "spcx_price_usd": "153.23", "fx_rate": "1545.3", "pct_vs_ipo": "0.135037", "value_usd": "88124290.7", "value_krw": "136178466423.0", "cost_usd": "77640013.34", "cost_krw": "117997292282.0", "gain_usd": "10484277.36", "gain_krw": "18181174141.0", "return_usd": "0.135037", "return_krw": "0.154081", "price_effect_krw": "15934004728.0", "fx_effect_krw": "2247169413.0", "source": "auto"}, {"date": "2026-06-29", "spcx_price_usd": "164.19", "fx_rate": "1544.2", "pct_vs_ipo": "0.216222", "value_usd": "94427509.56", "value_krw": "145814960268.0", "cost_usd": "77640013.34", "cost_krw": "117997292282.0", "gain_usd": "16787496.22", "gain_krw": "27817667987.0", "return_usd": "0.216222", "return_krw": "0.235748", "price_effect_krw": "25513636753.0", "fx_effect_krw": "2304031233.0", "source": "auto"}, {"date": "2026-06-30", "spcx_price_usd": "170.86", "fx_rate": "1541.5", "pct_vs_ipo": "0.26563", "value_usd": "98263501.33", "value_krw": "151473187307.0", "cost_usd": "77640013.34", "cost_krw": "117997292282.0", "gain_usd": "20623487.99", "gain_krw": "33475895025.0", "return_usd": "0.26563", "return_krw": "0.283701", "price_effect_krw": "31343577046.0", "fx_effect_krw": "2132317979.0", "source": "auto"}, {"date": "2026-07-01", "spcx_price_usd": "157.54", "fx_rate": "1548.4", "pct_vs_ipo": "0.166963", "value_usd": "90603020.02", "value_krw": "140289716195.0", "cost_usd": "77640013.34", "cost_krw": "117997292282.0", "gain_usd": "12963006.67", "gain_krw": "22292423913.0", "return_usd": "0.166963", "return_krw": "0.188923", "price_effect_krw": "19701177541.0", "fx_effect_krw": "2591246372.0", "source": "auto"}, {"date": "2026-07-02", "spcx_price_usd": "162.0", "fx_rate": "1554.4", "pct_vs_ipo": "0.2", "value_usd": "93168016.01", "value_krw": "144820364092.0", "cost_usd": "77640013.34", "cost_krw": "117997292282.0", "gain_usd": "15528002.67", "gain_krw": "26823071810.0", "return_usd": "0.2", "return_krw": "0.227319", "price_effect_krw": "23599458456.0", "fx_effect_krw": "3223613354.0", "source": "auto"}, {"date": "2026-07-03", "spcx_price_usd": "162.0", "fx_rate": "1554.1", "pct_vs_ipo": "0.2", "value_usd": "93168016.01", "value_krw": "144792413687.0", "cost_usd": "77640013.34", "cost_krw": "117997292282.0", "gain_usd": "15528002.67", "gain_krw": "26795121406.0", "return_usd": "0.2", "return_krw": "0.227083", "price_effect_krw": "23599458456.0", "fx_effect_krw": "3195662949.0", "source": "auto"}, {"date": "2026-07-06", "spcx_price_usd": "160.42", "fx_rate": "1539.7", "pct_vs_ipo": "0.188296", "value_usd": "92259340.3", "value_krw": "142051706263.0", "cost_usd": "77640013.34", "cost_krw": "117997292282.0", "gain_usd": "14619326.96", "gain_krw": "24054413982.0", "return_usd": "0.188296", "return_krw": "0.203856", "price_effect_krw": "22218453110.0", "fx_effect_krw": "1835960872.0", "source": "auto"}, {"date": "2026-07-07", "spcx_price_usd": "149.47", "fx_rate": "1531.8", "pct_vs_ipo": "0.107185", "value_usd": "85961872.55", "value_krw": "131676396377.0", "cost_usd": "77640013.34", "cost_krw": "117997292282.0", "gain_usd": "8321859.21", "gain_krw": "13679104095.0", "return_usd": "0.107185", "return_krw": "0.115927", "price_effect_krw": "12647561625.0", "fx_effect_krw": "1031542471.0", "source": "auto"}, {"date": "2026-07-08", "spcx_price_usd": "148.3", "fx_rate": "1526.6", "pct_vs_ipo": "0.098519", "value_usd": "85288992.44", "value_krw": "130202175855.0", "cost_usd": "77640013.34", "cost_krw": "117997292282.0", "gain_usd": "7648979.09", "gain_krw": "12204883573.0", "return_usd": "0.098519", "return_krw": "0.103434", "price_effect_krw": "11624918425.0", "fx_effect_krw": "579965149.0", "source": "auto"}, {"date": "2026-07-09", "spcx_price_usd": "152.16", "fx_rate": "1509.9", "pct_vs_ipo": "0.127111", "value_usd": "87508921.71", "value_krw": "132129720887.0", "cost_usd": "77640013.34", "cost_krw": "117997292282.0", "gain_usd": "9868908.36", "gain_krw": "14132428605.0", "return_usd": "0.127111", "return_krw": "0.119769", "price_effect_krw": "14998766930.0", "fx_effect_krw": "-866338325.0", "source": "auto"}, {"date": "2026-07-10", "spcx_price_usd": "145.3", "fx_rate": "1504.2", "pct_vs_ipo": "0.076296", "value_usd": "83563658.81", "value_krw": "125696455578.0", "cost_usd": "77640013.34", "cost_krw": "117997292282.0", "gain_usd": "5923645.46", "gain_krw": "7699163297.0", "return_usd": "0.076296", "return_krw": "0.065249", "price_effect_krw": "9002756374.0", "fx_effect_krw": "-1303593077.0", "source": "auto"}, {"date": "2026-07-13", "spcx_price_usd": "139.14", "fx_rate": "1507.1", "pct_vs_ipo": "0.030667", "value_usd": "80020973.75", "value_krw": "120599609545.0", "cost_usd": "77640013.34", "cost_krw": "117997292282.0", "gain_usd": "2380960.41", "gain_krw": "2602317263.0", "return_usd": "0.030667", "return_krw": "0.022054", "price_effect_krw": "3618583630.0", "fx_effect_krw": "-1016266367.0", "source": "auto"}, {"date": "2026-07-14", "spcx_price_usd": "136.08", "fx_rate": "1504.9", "pct_vs_ipo": "0.008", "value_usd": "78261133.45", "value_krw": "117775179731.0", "cost_usd": "77640013.34", "cost_krw": "117997292282.0", "gain_usd": "621120.11", "gain_krw": "-222112550.0", "return_usd": "0.008", "return_krw": "-0.001882", "price_effect_krw": "943978338.0", "fx_effect_krw": "-1166090888.0", "source": "auto"}, {"date": "2026-07-15", "spcx_price_usd": "135.27", "fx_rate": "1492.2", "pct_vs_ipo": "0.002", "value_usd": "77795293.37", "value_krw": "116086136769.0", "cost_usd": "77640013.34", "cost_krw": "117997292282.0", "gain_usd": "155280.03", "gain_krw": "-1911155512.0", "return_usd": "0.002", "return_krw": "-0.016197", "price_effect_krw": "235994585.0", "fx_effect_krw": "-2147150097.0", "source": "auto"}, {"date": "2026-07-16", "spcx_price_usd": "131.11", "fx_rate": "1488.8", "pct_vs_ipo": "-0.028815", "value_usd": "75402830.74", "value_krw": "112259734403.0", "cost_usd": "77640013.34", "cost_krw": "117997292282.0", "gain_usd": "-2237182.61", "gain_krw": "-5737557879.0", "return_usd": "-0.028815", "return_krw": "-0.048624", "price_effect_krw": "-3400070126.0", "fx_effect_krw": "-2337487753.0", "source": "auto"}, {"date": "2026-07-20", "spcx_price_usd": "119.85", "fx_rate": "1484.3", "pct_vs_ipo": "-0.112222", "value_usd": "68927078.51", "value_krw": "102308462638.0", "cost_usd": "77640013.34", "cost_krw": "117997292282.0", "gain_usd": "-8712934.83", "gain_krw": "-15688829643.0", "return_usd": "-0.112222", "return_krw": "-0.132959", "price_effect_krw": "-13241918356.0", "fx_effect_krw": "-2446911287.0", "source": "auto"}], "monthly": [{"year_month": "2026-06", "date": "2026-06-30", "spcx_price_usd": 170.86, "fx_rate": 1541.5, "value_krw": 151473187307.0, "gain_krw": 33475895025.0, "monthly_gain_change": 33475895025.0, "return_krw": 0.283701}, {"year_month": "2026-07", "date": "2026-07-20", "spcx_price_usd": 119.85, "fx_rate": 1484.3, "value_krw": 102308462638.0, "gain_krw": -15688829643.0, "monthly_gain_change": -49164724668.0, "return_krw": -0.132959}], "raw_spcx": [{"date": "2026-06-12", "close_usd": "160.95", "source": "seed_manual_verified", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-06-15", "close_usd": "192.5", "source": "seed_manual_verified", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-06-16", "close_usd": "201.8", "source": "seed_manual_verified", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-06-17", "close_usd": "191.82", "source": "seed_manual_verified", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-06-18", "close_usd": "185.0", "source": "seed_manual_verified", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-06-22", "close_usd": "154.6", "source": "seed_manual_verified", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-06-23", "close_usd": "156.11", "source": "seed_manual_verified", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-06-24", "close_usd": "154.54", "source": "seed_manual_verified", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-06-25", "close_usd": "153.0", "source": "seed_manual_verified", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-06-26", "close_usd": "153.23", "source": "seed_manual_verified", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-06-29", "close_usd": "164.19", "source": "seed_manual_verified", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-06-30", "close_usd": "170.86", "source": "seed_manual_verified", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-07-01", "close_usd": "157.54", "source": "seed_manual_verified", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-07-02", "close_usd": "162.0", "source": "seed_manual_verified", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-07-03", "close_usd": "162.0", "source": "seed_manual_verified", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-07-06", "close_usd": "160.42", "source": "seed_manual_verified", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-07-07", "close_usd": "149.47", "source": "seed_manual_verified", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-07-08", "close_usd": "148.3", "source": "seed_manual_verified", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-07-09", "close_usd": "152.16", "source": "seed_manual_verified", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-07-10", "close_usd": "145.3", "source": "seed_manual_verified", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-07-13", "close_usd": "139.14", "source": "seed_manual_verified", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-07-14", "close_usd": "136.08", "source": "seed_manual_verified", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-07-15", "close_usd": "135.27", "source": "seed_manual_verified", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-07-16", "close_usd": "131.11", "source": "seed_manual_verified", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-07-17", "close_usd": "123.99", "source": "seed_manual_verified", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-07-20", "close_usd": "119.85", "source": "seed_manual_verified", "fetched_at": "2026-07-21T05:03:01Z"}], "raw_fx": [{"date": "2026-06-12", "fx_rate": "1527.0", "stat_code": "731Y001", "source": "BOK_ECOS_731Y001_seed", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-06-15", "fx_rate": "1520.4", "stat_code": "731Y001", "source": "BOK_ECOS_731Y001_seed", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-06-16", "fx_rate": "1510.0", "stat_code": "731Y001", "source": "BOK_ECOS_731Y001_seed", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-06-17", "fx_rate": "1513.5", "stat_code": "731Y001", "source": "BOK_ECOS_731Y001_seed", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-06-18", "fx_rate": "1512.8", "stat_code": "731Y001", "source": "BOK_ECOS_731Y001_seed", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-06-19", "fx_rate": "1523.4", "stat_code": "731Y001", "source": "BOK_ECOS_731Y001_seed", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-06-22", "fx_rate": "1535.0", "stat_code": "731Y001", "source": "BOK_ECOS_731Y001_seed", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-06-23", "fx_rate": "1535.7", "stat_code": "731Y001", "source": "BOK_ECOS_731Y001_seed", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-06-24", "fx_rate": "1537.2", "stat_code": "731Y001", "source": "BOK_ECOS_731Y001_seed", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-06-25", "fx_rate": "1538.3", "stat_code": "731Y001", "source": "BOK_ECOS_731Y001_seed", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-06-26", "fx_rate": "1545.3", "stat_code": "731Y001", "source": "BOK_ECOS_731Y001_seed", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-06-29", "fx_rate": "1544.2", "stat_code": "731Y001", "source": "BOK_ECOS_731Y001_seed", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-06-30", "fx_rate": "1541.5", "stat_code": "731Y001", "source": "BOK_ECOS_731Y001_seed", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-07-01", "fx_rate": "1548.4", "stat_code": "731Y001", "source": "BOK_ECOS_731Y001_seed", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-07-02", "fx_rate": "1554.4", "stat_code": "731Y001", "source": "BOK_ECOS_731Y001_seed", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-07-03", "fx_rate": "1554.1", "stat_code": "731Y001", "source": "BOK_ECOS_731Y001_seed", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-07-06", "fx_rate": "1539.7", "stat_code": "731Y001", "source": "BOK_ECOS_731Y001_seed", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-07-07", "fx_rate": "1531.8", "stat_code": "731Y001", "source": "BOK_ECOS_731Y001_seed", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-07-08", "fx_rate": "1526.6", "stat_code": "731Y001", "source": "BOK_ECOS_731Y001_seed", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-07-09", "fx_rate": "1509.9", "stat_code": "731Y001", "source": "BOK_ECOS_731Y001_seed", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-07-10", "fx_rate": "1504.2", "stat_code": "731Y001", "source": "BOK_ECOS_731Y001_seed", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-07-13", "fx_rate": "1507.1", "stat_code": "731Y001", "source": "BOK_ECOS_731Y001_seed", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-07-14", "fx_rate": "1504.9", "stat_code": "731Y001", "source": "BOK_ECOS_731Y001_seed", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-07-15", "fx_rate": "1492.2", "stat_code": "731Y001", "source": "BOK_ECOS_731Y001_seed", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-07-16", "fx_rate": "1488.8", "stat_code": "731Y001", "source": "BOK_ECOS_731Y001_seed", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-07-20", "fx_rate": "1484.3", "stat_code": "731Y001", "source": "BOK_ECOS_731Y001_seed", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-07-21", "fx_rate": "1482.0", "stat_code": "731Y001", "source": "BOK_ECOS_731Y001_seed", "fetched_at": "2026-07-21T05:03:01Z"}], "latest": {"date": "2026-07-20", "spcx_price_usd": "119.85", "fx_rate": "1484.3", "pct_vs_ipo": "-0.112222", "value_usd": "68927078.51", "value_krw": "102308462638.0", "cost_usd": "77640013.34", "cost_krw": "117997292282.0", "gain_usd": "-8712934.83", "gain_krw": "-15688829643.0", "return_usd": "-0.112222", "return_krw": "-0.132959", "price_effect_krw": "-13241918356.0", "fx_effect_krw": "-2446911287.0", "source": "auto"}, "prev": {"date": "2026-07-16", "spcx_price_usd": "131.11", "fx_rate": "1488.8", "pct_vs_ipo": "-0.028815", "value_usd": "75402830.74", "value_krw": "112259734403.0", "cost_usd": "77640013.34", "cost_krw": "117997292282.0", "gain_usd": "-2237182.61", "gain_krw": "-5737557879.0", "return_usd": "-0.028815", "return_krw": "-0.048624", "price_effect_krw": "-3400070126.0", "fx_effect_krw": "-2337487753.0", "source": "auto"}, "row_630_gain_krw": 33475895025.0, "scenario": [{"pct": -0.5, "price": 67.5, "value_krw": 57620535904.0, "gain_krw": -60376756378.0, "return_krw": -0.511679}, {"pct": -0.4, "price": 81.0, "value_krw": 69144643085.0, "gain_krw": -48852649197.0, "return_krw": -0.414015}, {"pct": -0.3, "price": 94.5, "value_krw": 80668750265.0, "gain_krw": -37328542016.0, "return_krw": -0.316351}, {"pct": -0.2, "price": 108.0, "value_krw": 92192857446.0, "gain_krw": -25804434835.0, "return_krw": -0.218687}, {"pct": -0.1, "price": 121.5, "value_krw": 103716964627.0, "gain_krw": -14280327655.0, "return_krw": -0.121023}, {"pct": 0.0, "price": 135.0, "value_krw": 115241071808.0, "gain_krw": -2756220474.0, "return_krw": -0.023358}, {"pct": 0.1, "price": 148.5, "value_krw": 126765178989.0, "gain_krw": 8767886707.0, "return_krw": 0.074306}, {"pct": 0.2, "price": 162.0, "value_krw": 138289286169.0, "gain_krw": 20291993888.0, "return_krw": 0.17197}, {"pct": 0.3, "price": 175.5, "value_krw": 149813393350.0, "gain_krw": 31816101069.0, "return_krw": 0.269634}, {"pct": 0.4, "price": 189.0, "value_krw": 161337500531.0, "gain_krw": 43340208249.0, "return_krw": 0.367298}, {"pct": 0.5, "price": 202.5, "value_krw": 172861607712.0, "gain_krw": 54864315430.0, "return_krw": 0.464962}, {"pct": 0.75, "price": 236.25, "value_krw": 201671875664.0, "gain_krw": 83674583382.0, "return_krw": 0.709123}, {"pct": 1.0, "price": 270.0, "value_krw": 230482143616.0, "gain_krw": 112484851334.0, "return_krw": 0.953283}]};
+const DATA = {"generated_at": "2026-07-23 09:25", "constants": {"shares": 575111.2099619086, "ipo_price": 135.0, "acq_fx": 1519.8, "fund_shares": 2486250, "mirae_pct": 0.2313167259776045, "official_date": "2026-06-30", "official_cost_krw": 124231573148, "official_value_krw": 157295557878, "official_gain_krw": 33063984730, "official_fx": 1549.4, "official_price": 170.86}, "daily": [{"date": "2026-06-12", "spcx_price_usd": "160.95", "fx_rate": "1527.0", "pct_vs_ipo": "0.192222", "value_usd": "92564149.24", "value_krw": "141345455895.0", "cost_usd": "77640013.34", "cost_krw": "117997292282.0", "gain_usd": "14924135.9", "gain_krw": "23348163613.0", "return_usd": "0.192222", "return_krw": "0.19787", "price_effect_krw": "22681701739.0", "fx_effect_krw": "666461875.0", "source": "auto"}, {"date": "2026-06-15", "spcx_price_usd": "192.5", "fx_rate": "1520.4", "pct_vs_ipo": "0.425926", "value_usd": "110708907.92", "value_krw": "168321823598.0", "cost_usd": "77640013.34", "cost_krw": "117997292282.0", "gain_usd": "33068894.57", "gain_krw": "50324531317.0", "return_usd": "0.425926", "return_krw": "0.426489", "price_effect_krw": "50258105972.0", "fx_effect_krw": "66425345.0", "source": "auto"}, {"date": "2026-06-16", "spcx_price_usd": "201.8", "fx_rate": "1510.0", "pct_vs_ipo": "0.494815", "value_usd": "116057442.17", "value_krw": "175246737677.0", "cost_usd": "77640013.34", "cost_krw": "117997292282.0", "gain_usd": "38417428.83", "gain_krw": "57249445396.0", "return_usd": "0.494815", "return_krw": "0.485176", "price_effect_krw": "58386808329.0", "fx_effect_krw": "-1137362933.0", "source": "auto"}, {"date": "2026-06-17", "spcx_price_usd": "191.82", "fx_rate": "1513.5", "pct_vs_ipo": "0.420889", "value_usd": "110317832.29", "value_krw": "166966039178.0", "cost_usd": "77640013.34", "cost_krw": "117997292282.0", "gain_usd": "32677818.95", "gain_krw": "48968746897.0", "return_usd": "0.420889", "return_krw": "0.414999", "price_effect_krw": "49663749240.0", "fx_effect_krw": "-695002343.0", "source": "auto"}, {"date": "2026-06-18", "spcx_price_usd": "185.0", "fx_rate": "1512.8", "pct_vs_ipo": "0.37037", "value_usd": "106395573.84", "value_krw": "160955224110.0", "cost_usd": "77640013.34", "cost_krw": "117997292282.0", "gain_usd": "28755560.5", "gain_krw": "42957931828.0", "return_usd": "0.37037", "return_krw": "0.364059", "price_effect_krw": "43702700845.0", "fx_effect_krw": "-744769017.0", "source": "auto"}, {"date": "2026-06-22", "spcx_price_usd": "154.6", "fx_rate": "1535.0", "pct_vs_ipo": "0.145185", "value_usd": "88912193.06", "value_krw": "136480216347.0", "cost_usd": "77640013.34", "cost_krw": "117997292282.0", "gain_usd": "11272179.72", "gain_krw": "18482924066.0", "return_usd": "0.145185", "return_krw": "0.156639", "price_effect_krw": "17131458731.0", "fx_effect_krw": "1351465335.0", "source": "auto"}, {"date": "2026-06-23", "spcx_price_usd": "156.11", "fx_rate": "1535.7", "pct_vs_ipo": "0.15637", "value_usd": "89780610.99", "value_krw": "137876084293.0", "cost_usd": "77640013.34", "cost_krw": "117997292282.0", "gain_usd": "12140597.64", "gain_krw": "19878792011.0", "return_usd": "0.15637", "return_krw": "0.168468", "price_effect_krw": "18451280297.0", "fx_effect_krw": "1427511715.0", "source": "auto"}, {"date": "2026-06-24", "spcx_price_usd": "154.54", "fx_rate": "1537.2", "pct_vs_ipo": "0.144741", "value_usd": "88877686.39", "value_krw": "136622779515.0", "cost_usd": "77640013.34", "cost_krw": "117997292282.0", "gain_usd": "11237673.04", "gain_krw": "18625487233.0", "return_usd": "0.144741", "return_krw": "0.157847", "price_effect_krw": "17079015490.0", "fx_effect_krw": "1546471743.0", "source": "auto"}, {"date": "2026-06-25", "spcx_price_usd": "153.0", "fx_rate": "1538.3", "pct_vs_ipo": "0.133333", "value_usd": "87992015.12", "value_krw": "135358116866.0", "cost_usd": "77640013.34", "cost_krw": "117997292282.0", "gain_usd": "10352001.78", "gain_krw": "17360824584.0", "return_usd": "0.133333", "return_krw": "0.147129", "price_effect_krw": "15732972304.0", "fx_effect_krw": "1627852280.0", "source": "auto"}, {"date": "2026-06-26", "spcx_price_usd": "153.23", "fx_rate": "1545.3", "pct_vs_ipo": "0.135037", "value_usd": "88124290.7", "value_krw": "136178466423.0", "cost_usd": "77640013.34", "cost_krw": "117997292282.0", "gain_usd": "10484277.36", "gain_krw": "18181174141.0", "return_usd": "0.135037", "return_krw": "0.154081", "price_effect_krw": "15934004728.0", "fx_effect_krw": "2247169413.0", "source": "auto"}, {"date": "2026-06-29", "spcx_price_usd": "164.19", "fx_rate": "1544.2", "pct_vs_ipo": "0.216222", "value_usd": "94427509.56", "value_krw": "145814960268.0", "cost_usd": "77640013.34", "cost_krw": "117997292282.0", "gain_usd": "16787496.22", "gain_krw": "27817667987.0", "return_usd": "0.216222", "return_krw": "0.235748", "price_effect_krw": "25513636753.0", "fx_effect_krw": "2304031233.0", "source": "auto"}, {"date": "2026-06-30", "spcx_price_usd": "170.86", "fx_rate": "1541.5", "pct_vs_ipo": "0.26563", "value_usd": "98263501.33", "value_krw": "151473187307.0", "cost_usd": "77640013.34", "cost_krw": "117997292282.0", "gain_usd": "20623487.99", "gain_krw": "33475895025.0", "return_usd": "0.26563", "return_krw": "0.283701", "price_effect_krw": "31343577046.0", "fx_effect_krw": "2132317979.0", "source": "auto"}, {"date": "2026-07-01", "spcx_price_usd": "157.54", "fx_rate": "1548.4", "pct_vs_ipo": "0.166963", "value_usd": "90603020.02", "value_krw": "140289716195.0", "cost_usd": "77640013.34", "cost_krw": "117997292282.0", "gain_usd": "12963006.67", "gain_krw": "22292423913.0", "return_usd": "0.166963", "return_krw": "0.188923", "price_effect_krw": "19701177541.0", "fx_effect_krw": "2591246372.0", "source": "auto"}, {"date": "2026-07-02", "spcx_price_usd": "162.0", "fx_rate": "1554.4", "pct_vs_ipo": "0.2", "value_usd": "93168016.01", "value_krw": "144820364092.0", "cost_usd": "77640013.34", "cost_krw": "117997292282.0", "gain_usd": "15528002.67", "gain_krw": "26823071810.0", "return_usd": "0.2", "return_krw": "0.227319", "price_effect_krw": "23599458456.0", "fx_effect_krw": "3223613354.0", "source": "auto"}, {"date": "2026-07-03", "spcx_price_usd": "162.0", "fx_rate": "1554.1", "pct_vs_ipo": "0.2", "value_usd": "93168016.01", "value_krw": "144792413687.0", "cost_usd": "77640013.34", "cost_krw": "117997292282.0", "gain_usd": "15528002.67", "gain_krw": "26795121406.0", "return_usd": "0.2", "return_krw": "0.227083", "price_effect_krw": "23599458456.0", "fx_effect_krw": "3195662949.0", "source": "auto"}, {"date": "2026-07-06", "spcx_price_usd": "160.42", "fx_rate": "1539.7", "pct_vs_ipo": "0.188296", "value_usd": "92259340.3", "value_krw": "142051706263.0", "cost_usd": "77640013.34", "cost_krw": "117997292282.0", "gain_usd": "14619326.96", "gain_krw": "24054413982.0", "return_usd": "0.188296", "return_krw": "0.203856", "price_effect_krw": "22218453110.0", "fx_effect_krw": "1835960872.0", "source": "auto"}, {"date": "2026-07-07", "spcx_price_usd": "149.47", "fx_rate": "1531.8", "pct_vs_ipo": "0.107185", "value_usd": "85961872.55", "value_krw": "131676396377.0", "cost_usd": "77640013.34", "cost_krw": "117997292282.0", "gain_usd": "8321859.21", "gain_krw": "13679104095.0", "return_usd": "0.107185", "return_krw": "0.115927", "price_effect_krw": "12647561625.0", "fx_effect_krw": "1031542471.0", "source": "auto"}, {"date": "2026-07-08", "spcx_price_usd": "148.3", "fx_rate": "1526.6", "pct_vs_ipo": "0.098519", "value_usd": "85288992.44", "value_krw": "130202175855.0", "cost_usd": "77640013.34", "cost_krw": "117997292282.0", "gain_usd": "7648979.09", "gain_krw": "12204883573.0", "return_usd": "0.098519", "return_krw": "0.103434", "price_effect_krw": "11624918425.0", "fx_effect_krw": "579965149.0", "source": "auto"}, {"date": "2026-07-09", "spcx_price_usd": "152.16", "fx_rate": "1509.9", "pct_vs_ipo": "0.127111", "value_usd": "87508921.71", "value_krw": "132129720887.0", "cost_usd": "77640013.34", "cost_krw": "117997292282.0", "gain_usd": "9868908.36", "gain_krw": "14132428605.0", "return_usd": "0.127111", "return_krw": "0.119769", "price_effect_krw": "14998766930.0", "fx_effect_krw": "-866338325.0", "source": "auto"}, {"date": "2026-07-10", "spcx_price_usd": "145.3", "fx_rate": "1504.2", "pct_vs_ipo": "0.076296", "value_usd": "83563658.81", "value_krw": "125696455578.0", "cost_usd": "77640013.34", "cost_krw": "117997292282.0", "gain_usd": "5923645.46", "gain_krw": "7699163297.0", "return_usd": "0.076296", "return_krw": "0.065249", "price_effect_krw": "9002756374.0", "fx_effect_krw": "-1303593077.0", "source": "auto"}, {"date": "2026-07-13", "spcx_price_usd": "139.14", "fx_rate": "1507.1", "pct_vs_ipo": "0.030667", "value_usd": "80020973.75", "value_krw": "120599609545.0", "cost_usd": "77640013.34", "cost_krw": "117997292282.0", "gain_usd": "2380960.41", "gain_krw": "2602317263.0", "return_usd": "0.030667", "return_krw": "0.022054", "price_effect_krw": "3618583630.0", "fx_effect_krw": "-1016266367.0", "source": "auto"}, {"date": "2026-07-14", "spcx_price_usd": "136.08", "fx_rate": "1504.9", "pct_vs_ipo": "0.008", "value_usd": "78261133.45", "value_krw": "117775179731.0", "cost_usd": "77640013.34", "cost_krw": "117997292282.0", "gain_usd": "621120.11", "gain_krw": "-222112550.0", "return_usd": "0.008", "return_krw": "-0.001882", "price_effect_krw": "943978338.0", "fx_effect_krw": "-1166090888.0", "source": "auto"}, {"date": "2026-07-15", "spcx_price_usd": "135.27", "fx_rate": "1492.2", "pct_vs_ipo": "0.002", "value_usd": "77795293.37", "value_krw": "116086136769.0", "cost_usd": "77640013.34", "cost_krw": "117997292282.0", "gain_usd": "155280.03", "gain_krw": "-1911155512.0", "return_usd": "0.002", "return_krw": "-0.016197", "price_effect_krw": "235994585.0", "fx_effect_krw": "-2147150097.0", "source": "auto"}, {"date": "2026-07-16", "spcx_price_usd": "131.11", "fx_rate": "1488.8", "pct_vs_ipo": "-0.028815", "value_usd": "75402830.74", "value_krw": "112259734403.0", "cost_usd": "77640013.34", "cost_krw": "117997292282.0", "gain_usd": "-2237182.61", "gain_krw": "-5737557879.0", "return_usd": "-0.028815", "return_krw": "-0.048624", "price_effect_krw": "-3400070126.0", "fx_effect_krw": "-2337487753.0", "source": "auto"}, {"date": "2026-07-20", "spcx_price_usd": "119.85", "fx_rate": "1484.3", "pct_vs_ipo": "-0.112222", "value_usd": "68927078.51", "value_krw": "102308462638.0", "cost_usd": "77640013.34", "cost_krw": "117997292282.0", "gain_usd": "-8712934.83", "gain_krw": "-15688829643.0", "return_usd": "-0.112222", "return_krw": "-0.132959", "price_effect_krw": "-13241918356.0", "fx_effect_krw": "-2446911287.0", "source": "auto"}], "raw_spcx": [{"date": "2026-06-12", "close_usd": "160.95", "source": "seed_manual_verified", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-06-15", "close_usd": "192.5", "source": "seed_manual_verified", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-06-16", "close_usd": "201.8", "source": "seed_manual_verified", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-06-17", "close_usd": "191.82", "source": "seed_manual_verified", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-06-18", "close_usd": "185.0", "source": "seed_manual_verified", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-06-22", "close_usd": "154.6", "source": "seed_manual_verified", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-06-23", "close_usd": "156.11", "source": "seed_manual_verified", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-06-24", "close_usd": "154.54", "source": "seed_manual_verified", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-06-25", "close_usd": "153.0", "source": "seed_manual_verified", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-06-26", "close_usd": "153.23", "source": "seed_manual_verified", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-06-29", "close_usd": "164.19", "source": "seed_manual_verified", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-06-30", "close_usd": "170.86", "source": "seed_manual_verified", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-07-01", "close_usd": "157.54", "source": "seed_manual_verified", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-07-02", "close_usd": "162.0", "source": "seed_manual_verified", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-07-03", "close_usd": "162.0", "source": "seed_manual_verified", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-07-06", "close_usd": "160.42", "source": "seed_manual_verified", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-07-07", "close_usd": "149.47", "source": "seed_manual_verified", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-07-08", "close_usd": "148.3", "source": "seed_manual_verified", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-07-09", "close_usd": "152.16", "source": "seed_manual_verified", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-07-10", "close_usd": "145.3", "source": "seed_manual_verified", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-07-13", "close_usd": "139.14", "source": "seed_manual_verified", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-07-14", "close_usd": "136.08", "source": "seed_manual_verified", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-07-15", "close_usd": "135.27", "source": "seed_manual_verified", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-07-16", "close_usd": "131.11", "source": "seed_manual_verified", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-07-17", "close_usd": "123.99", "source": "seed_manual_verified", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-07-20", "close_usd": "119.85", "source": "seed_manual_verified", "fetched_at": "2026-07-21T05:03:01Z"}], "raw_fx": [{"date": "2026-06-12", "fx_rate": "1527.0", "stat_code": "731Y001", "source": "BOK_ECOS_731Y001_seed", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-06-15", "fx_rate": "1520.4", "stat_code": "731Y001", "source": "BOK_ECOS_731Y001_seed", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-06-16", "fx_rate": "1510.0", "stat_code": "731Y001", "source": "BOK_ECOS_731Y001_seed", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-06-17", "fx_rate": "1513.5", "stat_code": "731Y001", "source": "BOK_ECOS_731Y001_seed", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-06-18", "fx_rate": "1512.8", "stat_code": "731Y001", "source": "BOK_ECOS_731Y001_seed", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-06-19", "fx_rate": "1523.4", "stat_code": "731Y001", "source": "BOK_ECOS_731Y001_seed", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-06-22", "fx_rate": "1535.0", "stat_code": "731Y001", "source": "BOK_ECOS_731Y001_seed", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-06-23", "fx_rate": "1535.7", "stat_code": "731Y001", "source": "BOK_ECOS_731Y001_seed", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-06-24", "fx_rate": "1537.2", "stat_code": "731Y001", "source": "BOK_ECOS_731Y001_seed", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-06-25", "fx_rate": "1538.3", "stat_code": "731Y001", "source": "BOK_ECOS_731Y001_seed", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-06-26", "fx_rate": "1545.3", "stat_code": "731Y001", "source": "BOK_ECOS_731Y001_seed", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-06-29", "fx_rate": "1544.2", "stat_code": "731Y001", "source": "BOK_ECOS_731Y001_seed", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-06-30", "fx_rate": "1541.5", "stat_code": "731Y001", "source": "BOK_ECOS_731Y001_seed", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-07-01", "fx_rate": "1548.4", "stat_code": "731Y001", "source": "BOK_ECOS_731Y001_seed", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-07-02", "fx_rate": "1554.4", "stat_code": "731Y001", "source": "BOK_ECOS_731Y001_seed", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-07-03", "fx_rate": "1554.1", "stat_code": "731Y001", "source": "BOK_ECOS_731Y001_seed", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-07-06", "fx_rate": "1539.7", "stat_code": "731Y001", "source": "BOK_ECOS_731Y001_seed", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-07-07", "fx_rate": "1531.8", "stat_code": "731Y001", "source": "BOK_ECOS_731Y001_seed", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-07-08", "fx_rate": "1526.6", "stat_code": "731Y001", "source": "BOK_ECOS_731Y001_seed", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-07-09", "fx_rate": "1509.9", "stat_code": "731Y001", "source": "BOK_ECOS_731Y001_seed", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-07-10", "fx_rate": "1504.2", "stat_code": "731Y001", "source": "BOK_ECOS_731Y001_seed", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-07-13", "fx_rate": "1507.1", "stat_code": "731Y001", "source": "BOK_ECOS_731Y001_seed", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-07-14", "fx_rate": "1504.9", "stat_code": "731Y001", "source": "BOK_ECOS_731Y001_seed", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-07-15", "fx_rate": "1492.2", "stat_code": "731Y001", "source": "BOK_ECOS_731Y001_seed", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-07-16", "fx_rate": "1488.8", "stat_code": "731Y001", "source": "BOK_ECOS_731Y001_seed", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-07-20", "fx_rate": "1484.3", "stat_code": "731Y001", "source": "BOK_ECOS_731Y001_seed", "fetched_at": "2026-07-21T05:03:01Z"}, {"date": "2026-07-21", "fx_rate": "1482.0", "stat_code": "731Y001", "source": "BOK_ECOS_731Y001_seed", "fetched_at": "2026-07-21T05:03:01Z"}], "latest": {"date": "2026-07-20", "spcx_price_usd": "119.85", "fx_rate": "1484.3", "pct_vs_ipo": "-0.112222", "value_usd": "68927078.51", "value_krw": "102308462638.0", "cost_usd": "77640013.34", "cost_krw": "117997292282.0", "gain_usd": "-8712934.83", "gain_krw": "-15688829643.0", "return_usd": "-0.112222", "return_krw": "-0.132959", "price_effect_krw": "-13241918356.0", "fx_effect_krw": "-2446911287.0", "source": "auto"}, "scenario": [{"pct": -0.5, "price": 67.5, "value_krw": 57620535904.0, "gain_krw": -60376756378.0, "return_krw": -0.511679}, {"pct": -0.4, "price": 81.0, "value_krw": 69144643085.0, "gain_krw": -48852649197.0, "return_krw": -0.414015}, {"pct": -0.3, "price": 94.5, "value_krw": 80668750265.0, "gain_krw": -37328542016.0, "return_krw": -0.316351}, {"pct": -0.2, "price": 108.0, "value_krw": 92192857446.0, "gain_krw": -25804434835.0, "return_krw": -0.218687}, {"pct": -0.1, "price": 121.5, "value_krw": 103716964627.0, "gain_krw": -14280327655.0, "return_krw": -0.121023}, {"pct": 0.0, "price": 135.0, "value_krw": 115241071808.0, "gain_krw": -2756220474.0, "return_krw": -0.023358}, {"pct": 0.1, "price": 148.5, "value_krw": 126765178989.0, "gain_krw": 8767886707.0, "return_krw": 0.074306}, {"pct": 0.2, "price": 162.0, "value_krw": 138289286169.0, "gain_krw": 20291993888.0, "return_krw": 0.17197}, {"pct": 0.3, "price": 175.5, "value_krw": 149813393350.0, "gain_krw": 31816101069.0, "return_krw": 0.269634}, {"pct": 0.4, "price": 189.0, "value_krw": 161337500531.0, "gain_krw": 43340208249.0, "return_krw": 0.367298}, {"pct": 0.5, "price": 202.5, "value_krw": 172861607712.0, "gain_krw": 54864315430.0, "return_krw": 0.464962}, {"pct": 0.75, "price": 236.25, "value_krw": 201671875664.0, "gain_krw": 83674583382.0, "return_krw": 0.709123}, {"pct": 1.0, "price": 270.0, "value_krw": 230482143616.0, "gain_krw": 112484851334.0, "return_krw": 0.953283}]};
 
-function fmtKrw(x, signed) {
-  const v = x / 1e8;
-  const s = v.toLocaleString("ko-KR", {minimumFractionDigits: 2, maximumFractionDigits: 2});
-  return (signed && v >= 0 ? "+" : "") + s + "억원";
+function krw(v) {
+  const eok = v / 100000000;
+  return (v < 0 ? "" : "") + eok.toLocaleString("ko-KR", {maximumFractionDigits: 1}) + "억원";
 }
-function fmtUsd(x) { return "$" + (+x).toLocaleString("en-US", {minimumFractionDigits: 2, maximumFractionDigits: 2}); }
-function fmtPct(x, signed) {
-  const v = x * 100;
-  const s = v.toLocaleString("en-US", {minimumFractionDigits: 2, maximumFractionDigits: 2});
-  return (signed && v >= 0 ? "+" : "") + s + "%";
-}
-function fmtFx(x) { return (+x).toLocaleString("ko-KR", {minimumFractionDigits: 1, maximumFractionDigits: 1}) + "원"; }
+function usd(v) { return "$" + v.toLocaleString("en-US", {maximumFractionDigits: 0}); }
+function pct(v) { return (v * 100).toFixed(1) + "%"; }
+function signClass(v) { return v >= 0 ? "pos" : "neg"; }
 
-const daily = DATA.daily;
-const dates = daily.map(r => r.date);
-const latest = DATA.latest, prev = DATA.prev, K = DATA.constants;
+document.getElementById("subtitle").textContent =
+  `생성 시각: ${DATA.generated_at} · 미래생명 SpaceX 보유주식수 ${DATA.constants.shares.toLocaleString("ko-KR", {maximumFractionDigits:0})}주 · 취득환율 ${DATA.constants.acq_fx}원 · 공모가 $${DATA.constants.ipo_price}`;
 
-document.getElementById("topCaption").textContent =
-  `데이터 기준일: ${latest.date}  |  미래생명 SpaceX 보유주식수 ${K.shares.toLocaleString("ko-KR",{minimumFractionDigits:2,maximumFractionDigits:2})}주 · 공모가 $${K.ipo_price.toFixed(0)} · 취득환율 ${K.acq_fx.toFixed(1)}원 기준`;
-
-// ================= 1. 주가 추이 =================
-Plotly.newPlot("plotPrice", [{
-  x: dates, y: daily.map(r => +r.spcx_price_usd), mode: "lines+markers",
-  line: { color: "#c62828", width: 2.5 }, marker: { size: 4 }
-}], {
-  margin: { l: 50, r: 10, t: 10, b: 30 }, yaxis: { title: "USD" },
-  shapes: [{ type: "line", x0: 0, x1: 1, xref: "paper", y0: K.ipo_price, y1: K.ipo_price, yref: "y",
-    line: { dash: "dash", color: "gray" } }],
-  annotations: [{ x: 1, xref: "paper", y: K.ipo_price, yref: "y", text: `공모가 $${K.ipo_price.toFixed(0)}`,
-    showarrow: false, xanchor: "right", yanchor: "bottom", font: { color: "gray", size: 11 } }]
-}, { displayModeBar: false, responsive: true });
-
-Plotly.newPlot("plotFx", [{
-  x: dates, y: daily.map(r => +r.fx_rate), mode: "lines+markers",
-  line: { color: "#6a1b9a", width: 2.5 }, marker: { size: 4 }
-}], {
-  margin: { l: 55, r: 10, t: 10, b: 30 }, yaxis: { title: "원/USD" },
-  shapes: [{ type: "line", x0: 0, x1: 1, xref: "paper", y0: K.acq_fx, y1: K.acq_fx, yref: "y",
-    line: { dash: "dash", color: "gray" } }],
-  annotations: [{ x: 1, xref: "paper", y: K.acq_fx, yref: "y", text: `취득환율 ${K.acq_fx.toFixed(0)}원`,
-    showarrow: false, xanchor: "right", yanchor: "bottom", font: { color: "gray", size: 11 } }]
-}, { displayModeBar: false, responsive: true });
-
-// ================= 2. 손익 현황 =================
-function metricHtml(label, value, delta, deltaCls) {
-  return `<div class="metric">
-    <div class="metric-label">${label}</div>
-    <div class="metric-value">${value}</div>
-    ${delta ? `<div class="metric-delta ${deltaCls}">${delta}</div>` : ""}
-  </div>`;
-}
-const priceDelta = (+latest.spcx_price_usd - +prev.spcx_price_usd);
-const fxDelta = (+latest.fx_rate - +prev.fx_rate);
-document.getElementById("marketMetrics").innerHTML =
-  metricHtml("SpaceX 종가 (USD)", fmtUsd(latest.spcx_price_usd),
-    `${priceDelta >= 0 ? "+" : ""}${priceDelta.toFixed(2)} (전일比)`, priceDelta >= 0 ? "up" : "down") +
-  metricHtml("USD/KRW 환율", fmtFx(latest.fx_rate),
-    `${fxDelta >= 0 ? "+" : ""}${fxDelta.toFixed(1)}원 (전일比)`, fxDelta >= 0 ? "up" : "down");
-
-const statusRows = [
-  ["투자원가 (Acquisition Cost)", fmtUsd(latest.cost_usd), `${K.acq_fx.toFixed(1)}원`, fmtKrw(+latest.cost_krw)],
-  ["평가금액 (Current Valuation)", fmtUsd(latest.value_usd), `${(+latest.fx_rate).toFixed(1)}원`, fmtKrw(+latest.value_krw)],
-  ["평가손익 (Total P&L)", fmtUsd(latest.gain_usd), "-", fmtKrw(+latest.gain_krw)],
-  ["&nbsp;&nbsp;└ 주가상승효과 (Price Effect)", fmtUsd(+latest.value_usd - +latest.cost_usd), `${K.acq_fx.toFixed(1)}원 (취득환율)`, fmtKrw(+latest.price_effect_krw)],
-  ["&nbsp;&nbsp;└ 외화환산손익 (FX Translation)", "-", `${(fxDelta>=0?"+":"")}${fxDelta.toFixed(1)}원 (환율변동)`, fmtKrw(+latest.fx_effect_krw)],
-  ["누적 수익률 (Cumulative Return)", fmtPct(+latest.return_usd), "-", fmtPct(+latest.return_krw)],
+// ---------------- KPI ----------------
+const latest = DATA.latest;
+const kpis = [
+  { label: `평가금액 (${latest.date} 기준)`, value: krw(+latest.value_krw), sub: usd(+latest.value_usd), cls: "" },
+  { label: "취득원가", value: krw(+latest.cost_krw), sub: usd(+latest.cost_usd), cls: "" },
+  { label: "평가손익", value: krw(+latest.gain_krw), sub: pct(+latest.return_krw) + " (KRW)", cls: signClass(+latest.gain_krw) },
+  { label: "수익률 (USD 기준)", value: pct(+latest.return_usd), sub: `SpaceX $${latest.spcx_price_usd} · 공모가 대비 ${pct(+latest.pct_vs_ipo)}`, cls: signClass(+latest.return_usd) },
+  { label: "주가상승효과", value: krw(+latest.price_effect_krw), sub: "가격변동 × 취득환율", cls: signClass(+latest.price_effect_krw) },
+  { label: "외화환산손익", value: krw(+latest.fx_effect_krw), sub: `환율 ${latest.fx_rate}원`, cls: signClass(+latest.fx_effect_krw) },
 ];
-document.getElementById("statusTableWrap").innerHTML = `
-  <table class="status">
-  <thead><tr><th>구분</th><th>외화 (USD)</th><th>적용환율 (FX Rate)</th><th>원화 (억원)</th></tr></thead>
-  <tbody>${statusRows.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td></tr>`).join("")}</tbody>
-  </table>`;
+const kpiGrid = document.getElementById("kpiGrid");
+kpiGrid.innerHTML = kpis.map(k => `
+  <div class="kpi-card">
+    <div class="kpi-label">${k.label}</div>
+    <div class="kpi-value ${k.cls}">${k.value}</div>
+    <div class="kpi-sub ${k.cls}">${k.sub}</div>
+  </div>
+`).join("");
 
-Plotly.newPlot("plotWaterfall", [{
-  type: "waterfall", orientation: "v",
-  measure: ["relative", "relative", "relative", "total"],
-  x: ["1. 취득원가", "2. 주가상승효과", "3. 외화환산손익", "4. 최신 평가금액"],
-  textposition: "outside",
-  text: [
-    `${(+latest.cost_krw/1e8).toLocaleString("ko-KR",{maximumFractionDigits:2})}억`,
-    `${(+latest.price_effect_krw/1e8>=0?"+":"")}${(+latest.price_effect_krw/1e8).toLocaleString("ko-KR",{maximumFractionDigits:2})}억`,
-    `${(+latest.fx_effect_krw/1e8>=0?"+":"")}${(+latest.fx_effect_krw/1e8).toLocaleString("ko-KR",{maximumFractionDigits:2})}억`,
-    `${(+latest.value_krw/1e8).toLocaleString("ko-KR",{maximumFractionDigits:2})}억`,
-  ],
-  y: [+latest.cost_krw/1e8, +latest.price_effect_krw/1e8, +latest.fx_effect_krw/1e8, +latest.value_krw/1e8],
-  connector: { line: { color: "gray", width: 1.5 } },
-  decreasing: { marker: { color: "#c62828" } },
-  increasing: { marker: { color: "#2e7d32" } },
-  totals: { marker: { color: "#1f4e78" } },
-}], {
-  margin: { l: 45, r: 10, t: 10, b: 40 }, yaxis: { title: "억원" }, showlegend: false
-}, { displayModeBar: false, responsive: true });
+// ---------------- Charts ----------------
+const labels = DATA.daily.map(r => r.date);
 
-// ---- 시나리오 시뮬레이터 ----
-const priceSlider = document.getElementById("priceSlider"), priceInput = document.getElementById("priceInput");
-const fxSlider = document.getElementById("fxSlider"), fxInput = document.getElementById("fxInput");
-priceSlider.value = priceInput.value = (+latest.spcx_price_usd).toFixed(1);
-fxSlider.value = fxInput.value = (+latest.fx_rate).toFixed(0);
+new Chart(document.getElementById("priceChart"), {
+  type: "line",
+  data: { labels, datasets: [{ label: "SpaceX 종가 (USD)", data: DATA.daily.map(r => +r.spcx_price_usd),
+    borderColor: "#c62828", backgroundColor: "rgba(198,40,40,0.08)", fill: true, tension: 0.2, pointRadius: 2 }] },
+  options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, title: { display: true, text: "SpaceX 종가 (USD)" } } }
+});
 
-function computeRow(price, fx) {
-  const shares = K.shares;
-  const costUsd = shares * K.ipo_price, costKrw = costUsd * K.acq_fx;
-  const valueUsd = shares * price, valueKrw = valueUsd * fx;
+new Chart(document.getElementById("fxChart"), {
+  type: "line",
+  data: { labels, datasets: [{ label: "USD/KRW 매매기준율", data: DATA.daily.map(r => +r.fx_rate),
+    borderColor: "#6a1b9a", backgroundColor: "rgba(106,27,154,0.08)", fill: true, tension: 0.2, pointRadius: 2 }] },
+  options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, title: { display: true, text: "USD/KRW 매매기준율 (한국은행 ECOS)" } } }
+});
+
+new Chart(document.getElementById("gainChart"), {
+  type: "bar",
+  data: {
+    labels,
+    datasets: [
+      { label: "주가상승효과", data: DATA.daily.map(r => +r.price_effect_krw / 1e8), backgroundColor: "#ef9a9a", stack: "s" },
+      { label: "외화환산손익", data: DATA.daily.map(r => +r.fx_effect_krw / 1e8), backgroundColor: "#90caf9", stack: "s" },
+      { label: "총 평가손익", data: DATA.daily.map(r => +r.gain_krw / 1e8), type: "line", borderColor: "#1a1a1a", backgroundColor: "#1a1a1a", pointRadius: 2, tension: 0.15 },
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    scales: { x: { stacked: true }, y: { stacked: true, title: { display: true, text: "억원" } } },
+    plugins: { legend: { position: "bottom" } }
+  }
+});
+
+// ---------------- Scenario ----------------
+function computeScenario(pct) {
+  const shares = DATA.constants.shares;
+  const costUsd = shares * DATA.constants.ipo_price;
+  const costKrw = costUsd * DATA.constants.acq_fx;
+  const fx = +latest.fx_rate;
+  const price = DATA.constants.ipo_price * (1 + pct / 100);
+  const valueUsd = shares * price;
+  const valueKrw = valueUsd * fx;
   const gainKrw = valueKrw - costKrw;
-  const priceEffect = (valueUsd - costUsd) * K.acq_fx;
-  const fxEffect = valueUsd * (fx - K.acq_fx);
-  return { valueKrw, gainKrw, returnKrw: gainKrw / costKrw, pctVsIpo: price / K.ipo_price - 1, priceEffect, fxEffect, costKrw };
+  return { price, valueKrw, gainKrw, returnKrw: gainKrw / costKrw };
 }
 
-function renderScenario() {
-  const price = +priceInput.value, fx = +fxInput.value;
-  const sim = computeRow(price, fx);
-  document.getElementById("scenarioMetrics").innerHTML =
-    metricHtml("시나리오 평가금액 (억원)", fmtKrw(sim.valueKrw)) +
-    metricHtml("시나리오 평가손익 (억원)", fmtKrw(sim.gainKrw)) +
-    metricHtml("시나리오 수익률", fmtPct(sim.returnKrw)) +
-    metricHtml("공모가 대비 등락률", fmtPct(sim.pctVsIpo));
-  document.getElementById("scenarioCaption").textContent =
-    `주가상승효과 ${fmtKrw(sim.priceEffect)} · 외화환산손익 ${fmtKrw(sim.fxEffect)} (취득원가 ${fmtKrw(sim.costKrw)} 기준, 미래생명 보유주식수 ${K.shares.toLocaleString("ko-KR",{minimumFractionDigits:2,maximumFractionDigits:2})}주)`;
+function renderScenarioTable() {
+  const rows = DATA.scenario.map(r => `
+    <tr>
+      <td>${(r.pct*100).toFixed(0)}%</td>
+      <td>$${r.price.toFixed(2)}</td>
+      <td>${krw(r.value_krw)}</td>
+      <td class="${signClass(r.gain_krw)}">${krw(r.gain_krw)}</td>
+      <td class="${signClass(r.return_krw)}">${pct(r.return_krw)}</td>
+    </tr>`).join("");
+  document.getElementById("scenarioTable").innerHTML = `
+    <thead><tr><th>공모가 대비</th><th>SpaceX 주가</th><th>평가금액</th><th>평가손익</th><th>수익률</th></tr></thead>
+    <tbody>${rows}</tbody>`;
 }
-function syncPrice(v) { priceSlider.value = v; priceInput.value = v; renderScenario(); }
-function syncFx(v) { fxSlider.value = v; fxInput.value = v; renderScenario(); }
-priceSlider.addEventListener("input", e => syncPrice(e.target.value));
-priceInput.addEventListener("input", e => syncPrice(e.target.value));
-fxSlider.addEventListener("input", e => syncFx(e.target.value));
-fxInput.addEventListener("input", e => syncFx(e.target.value));
-renderScenario();
+renderScenarioTable();
 
-// NAV 비교
-document.getElementById("navCompare").innerHTML = `
-  <ul>
-    <li><b>공식 평가손익 (원본자료, NAV·기준가 기준, ${K.official_date})</b>: ${fmtKrw(K.official_gain_krw)}
-      (취득금액 ${fmtKrw(K.official_cost_krw)} → 평가금액 ${fmtKrw(K.official_value_krw)})
-      — 펀드 전체(예금·외화예치금·기타자산·운용보수 등) 효과가 모두 반영된 확정 손익입니다.</li>
-    <li><b>SpaceX Look-through 평가손익 (${K.official_date}, 이 대시보드 방식)</b>: ${DATA.row_630_gain_krw !== null ? fmtKrw(DATA.row_630_gain_krw) : "기록 없음"}
-      — 미래생명 실제 보유주식수(${K.shares.toLocaleString("ko-KR",{maximumFractionDigits:2})}주) × SpaceX 주가로 산출한 SpaceX 고유 손익입니다.</li>
-    <li>두 수치의 차이는 운용보수, 현금성자산(예금·외화예치금) 효과, 그리고 Apex Fund. Ltd.의 SpaceX 보유주식수(${K.fund_shares.toLocaleString("ko-KR")}주) × 6/30가격이
-      원본자료 공시 평가금액과 약 0.8% 차이 나는 점에 기인합니다.</li>
-    <li>이 대시보드는 <b>일일 자동 갱신이 가능한 SpaceX Look-through 방식</b>을 기준으로 하며, 공식 NAV 기준 손익은 펀드 운용사가 공식 기준가를 발표하는 시점에만 갱신 가능합니다.</li>
-  </ul>`;
+const slider = document.getElementById("scenarioSlider");
+const readout = document.getElementById("scenarioReadout");
+function updateReadout() {
+  const p = +slider.value;
+  const r = computeScenario(p);
+  readout.textContent = `주가 $${r.price.toFixed(2)} → 손익 ${krw(r.gainKrw)} (${pct(r.returnKrw)})`;
+  readout.className = "scenario-readout " + signClass(r.gainKrw);
+}
+slider.addEventListener("input", updateReadout);
+updateReadout();
 
-// ================= 3. 손익 추이 =================
-Plotly.newPlot("plotGain", [{
-  x: dates, y: daily.map(r => +r.gain_krw / 1e8), mode: "lines+markers", name: "평가손익",
-  line: { color: "#1f4e78", width: 3 }
-}], {
-  margin: { l: 55, r: 10, t: 10, b: 30 }, yaxis: { title: "평가손익 (억원)" },
-  shapes: [{ type: "line", x0: 0, x1: 1, xref: "paper", y0: 0, y1: 0, yref: "y", line: { dash: "dot", color: "gray" } }]
-}, { displayModeBar: false, responsive: true });
+// ---------------- Grid.js tables ----------------
+new gridjs.Grid({
+  columns: ["날짜", "SpaceX($)", "환율(원)", "평가금액", "평가손익", "수익률(KRW)"],
+  data: DATA.daily.slice().reverse().map(r => [
+    r.date, (+r.spcx_price_usd).toFixed(2), (+r.fx_rate).toFixed(1),
+    krw(+r.value_krw), krw(+r.gain_krw), pct(+r.return_krw)
+  ]),
+  sort: true, search: true, pagination: { limit: 10 },
+  style: { table: { fontSize: "13px" } }
+}).render(document.getElementById("dailyGrid"));
 
-Plotly.newPlot("plotFactor", [
-  { x: dates, y: daily.map(r => +r.price_effect_krw / 1e8), stackgroup: "one", name: "주가상승효과", line: { color: "#2e7d32" } },
-  { x: dates, y: daily.map(r => +r.fx_effect_krw / 1e8), stackgroup: "one", name: "외화환산손익", line: { color: "#f9a825" } },
-  { x: dates, y: daily.map(r => +r.gain_krw / 1e8), mode: "lines", name: "평가손익 합계", line: { color: "#1f4e78", width: 2, dash: "dot" } },
-], {
-  margin: { l: 50, r: 10, t: 10, b: 30 }, yaxis: { title: "억원" }, legend: { orientation: "h", y: -0.25 }
-}, { displayModeBar: false, responsive: true });
+new gridjs.Grid({
+  columns: ["날짜", "종가(USD)", "출처"],
+  data: DATA.raw_spcx.slice().reverse().map(r => [r.date, "$" + (+r.close_usd).toFixed(2), r.source]),
+  sort: true, pagination: { limit: 8 },
+  style: { table: { fontSize: "12px" } }
+}).render(document.getElementById("rawSpcxGrid"));
 
-// 월별
-const monthly = DATA.monthly;
-const monthColors = monthly.map(m => m.monthly_gain_change >= 0 ? "#2e7d32" : "#c62828");
-Plotly.newPlot("plotMonthly", [{
-  type: "bar", x: monthly.map(m => m.year_month), y: monthly.map(m => m.monthly_gain_change / 1e8),
-  marker: { color: monthColors },
-  text: monthly.map(m => `${m.monthly_gain_change >= 0 ? "+" : ""}${(m.monthly_gain_change/1e8).toLocaleString("ko-KR",{maximumFractionDigits:2})}억`),
-  textposition: "outside"
-}], {
-  margin: { l: 55, r: 10, t: 20, b: 40 }, yaxis: { title: "변동액 (억원)" }
-}, { displayModeBar: false, responsive: true });
-
-document.getElementById("monthlyTableWrap").innerHTML = `
-  <table class="datatable">
-  <thead><tr><th>년-월</th><th>월말 주가</th><th>월말 환율</th><th>평가금액</th><th>평가손익</th><th>월간 손익변동</th><th>누적수익률</th></tr></thead>
-  <tbody>${monthly.map(m => `<tr>
-    <td>${m.year_month}</td><td>${fmtUsd(m.spcx_price_usd)}</td><td>${fmtFx(m.fx_rate)}</td>
-    <td>${fmtKrw(m.value_krw)}</td><td>${fmtKrw(m.gain_krw)}</td>
-    <td>${fmtKrw(m.monthly_gain_change, true)}</td><td>${fmtPct(m.return_krw, true)}</td>
-  </tr>`).join("")}</tbody>
-  </table>`;
-
-// ================= 4. 기초데이터 =================
-document.getElementById("dailyTableWrap").innerHTML = `
-  <table class="datatable">
-  <thead><tr><th>날짜</th><th>SpaceX 종가(USD)</th><th>환율(원)</th><th>공모가대비</th><th>평가금액</th><th>평가손익</th><th>수익률</th><th>주가효과</th><th>환산효과</th><th>데이터출처</th></tr></thead>
-  <tbody>${daily.slice().reverse().map(r => `<tr>
-    <td>${r.date}</td><td>${fmtUsd(r.spcx_price_usd)}</td><td>${fmtFx(r.fx_rate)}</td>
-    <td>${fmtPct(+r.pct_vs_ipo, true)}</td><td>${fmtKrw(+r.value_krw)}</td><td>${fmtKrw(+r.gain_krw)}</td>
-    <td>${fmtPct(+r.return_krw, true)}</td><td>${fmtKrw(+r.price_effect_krw)}</td><td>${fmtKrw(+r.fx_effect_krw)}</td><td>${r.source}</td>
-  </tr>`).join("")}</tbody>
-  </table>`;
-
-// ================= 5. Raw 데이터 =================
-document.getElementById("rawSpcxWrap").innerHTML = `
-  <table class="datatable">
-  <thead><tr><th>날짜</th><th>종가(USD)</th><th>출처</th></tr></thead>
-  <tbody>${DATA.raw_spcx.slice().reverse().map(r => `<tr><td>${r.date}</td><td>${fmtUsd(r.close_usd)}</td><td>${r.source}</td></tr>`).join("")}</tbody>
-  </table>`;
-document.getElementById("rawFxWrap").innerHTML = `
-  <table class="datatable">
-  <thead><tr><th>날짜</th><th>매매기준율</th><th>출처</th></tr></thead>
-  <tbody>${DATA.raw_fx.slice().reverse().map(r => `<tr><td>${r.date}</td><td>${fmtFx(r.fx_rate)}</td><td>${r.source}</td></tr>`).join("")}</tbody>
-  </table>`;
+new gridjs.Grid({
+  columns: ["날짜", "매매기준율", "출처"],
+  data: DATA.raw_fx.slice().reverse().map(r => [r.date, (+r.fx_rate).toFixed(1) + "원", r.source]),
+  sort: true, pagination: { limit: 8 },
+  style: { table: { fontSize: "12px" } }
+}).render(document.getElementById("rawFxGrid"));
 
 document.getElementById("footer").innerHTML =
-  `생성 시각: ${DATA.generated_at} · 이 페이지는 정적 스냅샷이며, 영업일 매일 아침 GitHub Actions가 데이터를 갱신하고 재배포합니다.`;
+  `데이터 출처: SpaceX(SPCX) 종가는 Yahoo Finance(stooq 폴백), USD/KRW 매매기준율은 한국은행 ECOS 공개API(731Y001)에서 수집됩니다. ` +
+  `서울외국환중개(smbs.biz)는 이용약관상 자동 수집을 금지하고 있어 제외했습니다.<br>` +
+  `이 아티팩트는 라이브 커넥터가 아닌 스냅샷 데이터를 담고 있으며, 영업일 매일 아침 8:40(KST) 예약 작업이 데이터를 갱신하고 이 아티팩트를 다시 저장합니다.`;
 </script>
 </body>
 </html>
