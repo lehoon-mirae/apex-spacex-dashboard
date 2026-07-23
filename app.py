@@ -17,6 +17,22 @@ from constants import (
 
 st.set_page_config(page_title="미래생명 APEX 펀드(SpaceX) 대시보드", layout="wide")
 
+# --- 비밀번호 인증 로직 ---
+if "authenticated" not in st.session_state:
+    st.session_state.authenticated = False
+
+if not st.session_state.authenticated:
+    st.title("🔒 대시보드 접근 권한 필요")
+    pwd = st.text_input("비밀번호를 입력하세요", type="password")
+    if st.button("확인"):
+        if pwd == "apex2026":
+            st.session_state.authenticated = True
+            st.rerun()
+        else:
+            st.error("비밀번호가 일치하지 않습니다.")
+    st.stop()
+# --------------------------
+
 
 @st.cache_data(ttl=3600)
 def load_data():
