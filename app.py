@@ -34,7 +34,7 @@ if not st.session_state.authenticated:
 # --------------------------
 
 
-@st.cache_data(ttl=3600)
+@st.cache_data(ttl=300)
 def load_data():
     df = pd.read_csv(DATA_CSV_PATH, encoding="utf-8-sig")
     df["date"] = pd.to_datetime(df["date"])
