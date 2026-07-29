@@ -101,8 +101,20 @@ def build_daily_log(spcx_path=RAW_SPCX_CSV_PATH, fx_path=RAW_FX_CSV_PATH, out_pa
     spcx_rows = {r["date"]: float(r["close_usd"]) for r in _read_csv(spcx_path)}
     fx_rows = {r["date"]: float(r["fx_rate"]) for r in _read_csv(fx_path)}
 
-    common_dates = sorted(set(spcx_rows) & set(fx_rows))
-    out_rows = [compute_row(d, spcx_rows[d], fx_rows[d], source="auto") for d in common_dates]
+    all_dates = sorted(set(spcx_rows) | set(fx_rows))
+    
+    out_rows = []
+    last_spcx = None
+    last_fx = None
+    
+    for d in all_dates:
+        if d in spcx_rows:
+            last_spcx = spcx_rows[d]
+        if d in fx_rows:
+            last_fx = fx_rows[d]
+            
+        if last_spcx is not None and last_fx is not None:
+            out_rows.append(compute_row(d, last_spcx, last_fx, source="auto"))
 
     with open(out_path, "w", newline="", encoding="utf-8-sig") as f:
         w = csv.DictWriter(f, fieldnames=CSV_COLUMNS)
