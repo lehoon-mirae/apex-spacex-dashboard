@@ -25,14 +25,14 @@ from sources import update_raw_spcx, update_raw_fx
 
 
 def main():
-    spcx_row = update_raw_spcx()
-    if spcx_row:
-        print(f"[SPCX] 신규 raw 데이터 추가: {spcx_row}")
+    spcx_rows = update_raw_spcx()
+    if spcx_rows:
+        print(f"[SPCX] 신규 raw 데이터 {len(spcx_rows)}건 추가: {[r['date'] for r in spcx_rows]}")
     else:
-        print("[SPCX] 오늘 날짜 데이터가 이미 존재합니다.")
+        print("[SPCX] 추가할 신규 날짜가 없습니다.")
 
     try:
-        fx_rows = update_raw_fx(days_back=10)
+        fx_rows = update_raw_fx(days_back=90)
         if fx_rows:
             print(f"[FX/ECOS] 신규 raw 데이터 {len(fx_rows)}건 추가: {[r['date'] for r in fx_rows]}")
         else:

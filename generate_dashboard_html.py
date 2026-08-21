@@ -12,6 +12,7 @@ data/daily_log.csv, data/raw_spcx_price.csv, data/raw_fx_bok.csv, constants.py �
 """
 import csv
 import json
+import os
 import datetime as dt
 
 import constants as C
@@ -80,7 +81,13 @@ def main():
     with open("dashboard_artifact.html", "w", encoding="utf-8") as f:
         f.write(html)
 
-    print(f"dashboard_artifact.html 생성 완료 ({len(daily_sorted)}행, 기준일 {latest['date'] if latest else 'N/A'})")
+    # Cowork 아티팩트와 완전히 동일한 화면을 공개 웹사이트(GitHub Pages)로도 그대로 배포한다.
+    # docs/ 폴더를 GitHub Pages가 서빙하도록 설정하면 이 파일이 곧 공개 URL이 된다.
+    os.makedirs("docs", exist_ok=True)
+    with open("docs/index.html", "w", encoding="utf-8") as f:
+        f.write(html)
+
+    print(f"dashboard_artifact.html / docs/index.html 생성 완료 ({len(daily_sorted)}행, 기준일 {latest['date'] if latest else 'N/A'})")
 
 
 HTML_TEMPLATE = r"""<!DOCTYPE html>

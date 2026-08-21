@@ -1,46 +1,47 @@
-name: Daily APEX/SpaceX data update
+name: Daily Data Update
 
-'on':
+on:
   schedule:
-    # 영업일(월~금, 한국시간 KST=UTC+9) 매일 아침 8시 40분에 실행.
-    # KST 08:40 = UTC 전일 23:40. cron의 day-of-week는 UTC 기준이므로
-    # UTC 일~목(0-4) 23:40 에 걸어야 KST 월~금 08:40 에 해당합니다.
-    # GitHub Actions cron은 공휴일을 인식하지 못하므로, 국내 공휴일이 평일과 겹치는 날에는
-    # 그냥 실행되되 시장이 열리지 않아 새 데이터가 없으면 raw CSV에 아무 것도 추가되지 않고
-    # (build_daily_log()도 변화가 없어) 커밋 없이 조용히 종료됩니다 - 데이터 오염 없음.
-    - cron: "40 23 * * 0-4"
-  workflow_dispatch: {}   # Actions 탭에서 수동 실행 버튼도 사용 가능
-
-permissions:
-  contents: write
+    # 매일 오전 9시 10분 KST (= UTC 00:10) 실행 — 한국은행 ECOS가 전영업일 환율을 00:00 KST 이후 확정 공시
+    - cron: "10 0 * * 1-5"
+  workflow_dispatch:  # 수동 실행 허용 (GitHub Actions 탭 > Run workflow)
 
 jobs:
   update-data:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write  # data/*.csv 커밋을 위해 필요
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.12"
+          cache: "pip"
 
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Run daily fetch script
+      - name: Run daily data fetch
         env:
-          # (선택) https://ecos.bok.or.kr 에서 무료 발급받은 개인 API 키를 저장소
-          # Settings > Secrets and variables > Actions 에 ECOS_API_KEY 로 등록하면 사용됩니다.
-          # 미등록 시 공개 샘플 키('sample', 1회 최대 10건)로 자동 폴백합니다.
           ECOS_API_KEY: ${{ secrets.ECOS_API_KEY }}
         run: python fetch_daily_data.py
 
       - name: Commit and push updated data
         run: |
-          git config user.name "github-actions[bot]"
+          git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/daily_log.csv data/raw_spcx_price.csv data/raw_fx_bok.csv
-          git diff --cached --quiet && echo "No changes to commit" || git commit -m "chore: daily data update $(date -u +%Y-%m-%d)"
-          git push
+          git add data/
+          # 변경이 없으면 커밋 스킵
+          if git diff --cached --quiet; then
+            echo "데이터 변경 없음 — 커밋 스킵"
+          else
+            DATE=$(TZ=Asia/Seoul date '+%Y-%m-%d')
+            git commit -m "data: auto-update ${DATE} [skip ci]"
+            git push
+          fi

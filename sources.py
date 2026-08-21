@@ -12,6 +12,7 @@ import csv
 import datetime as dt
 import json
 import os
+import sys
 import urllib.request
 
 from constants import (
@@ -46,15 +47,17 @@ def append_raw_row(path, columns, row: dict):
 # ------------------------------------------------------------------
 # SpaceX(SPCX) 종가
 # ------------------------------------------------------------------
-def fetch_spcx_price_yfinance():
+def fetch_spcx_prices_yfinance(period="3mo"):
     import yfinance as yf
 
-    df = yf.Ticker(SPCX_TICKER).history(period="5d")
+    df = yf.Ticker(SPCX_TICKER).history(period=period)
     if df.empty:
         raise RuntimeError("yfinance: SPCX 시세를 가져오지 못했습니다.")
-    last_date = df.index[-1].strftime("%Y-%m-%d")
-    last_close = float(df["Close"].iloc[-1])
-    return last_date, last_close
+    results = []
+    for idx, row in df.iterrows():
+        date_str = idx.strftime("%Y-%m-%d")
+        results.append((date_str, float(row["Close"])))
+    return results
 
 
 def fetch_spcx_price_stooq_fallback():
@@ -67,65 +70,78 @@ def fetch_spcx_price_stooq_fallback():
     with urllib.request.urlopen(req, timeout=15) as resp:
         df = pd.read_csv(io.StringIO(resp.read().decode("utf-8")))
     df = df.dropna()
-    last_row = df.iloc[-1]
-    return str(last_row["Date"]), float(last_row["Close"])
+    results = []
+    # 컬럼명이 대소문자 차이가 있을 수 있으므로 소문자로 변경
+    df.columns = [c.lower() for c in df.columns]
+    for _, row in df.iterrows():
+        results.append((str(row["date"]), float(row["close"])))
+    return results
 
 
-def fetch_spcx_price():
+def fetch_spcx_prices():
     try:
-        date_str, price = fetch_spcx_price_yfinance()
-        return date_str, price, "yfinance"
-    except Exception:
-        date_str, price = fetch_spcx_price_stooq_fallback()
-        return date_str, price, "stooq_fallback"
+        results = fetch_spcx_prices_yfinance("3mo")
+        return results, "yfinance"
+    except Exception as e:
+        print(f"yfinance fetch failed: {e}, attempting stooq fallback...", file=sys.stderr)
+        results = fetch_spcx_price_stooq_fallback()
+        return results, "stooq_fallback"
+
 
 
 # ------------------------------------------------------------------
 # USD/KRW 매매기준율 (한국은행 ECOS)
 # ------------------------------------------------------------------
-def fetch_fx_ecos(days_back=10):
+def fetch_fx_ecos(days_back=90):
     """
     최근 days_back일간의 매매기준율 시계열을 [(date_str, value), ...] 로 반환합니다.
-    ECOS_API_KEY 환경변수가 없으면 한국은행이 제공하는 공개 샘플 키('sample')로 폴백합니다
-    (샘플 키는 1회 최대 10건 제한 - 무료 개인 키는 https://ecos.bok.or.kr 에서 즉시 발급 가능).
     """
     api_key = os.environ.get(ECOS_API_KEY_ENV, "sample")
     end = dt.date.today()
     start = end - dt.timedelta(days=days_back)
-    count = 10 if api_key == "sample" else 100
-
-    url = (
-        f"{ECOS_BASE_URL}/{api_key}/json/kr/1/{count}/{ECOS_STAT_CODE}/D/"
-        f"{start:%Y%m%d}/{end:%Y%m%d}/{ECOS_ITEM_CODE}"
-    )
-    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
-    with urllib.request.urlopen(req, timeout=15) as resp:
-        data = json.loads(resp.read().decode("utf-8"))
-
-    if "StatisticSearch" not in data:
-        msg = data.get("RESULT", {}).get("MESSAGE", str(data))
-        raise RuntimeError(f"ECOS API 오류: {msg}")
-
+    
     out = []
-    for row in data["StatisticSearch"]["row"]:
-        d = row["TIME"]  # YYYYMMDD
-        date_str = f"{d[:4]}-{d[4:6]}-{d[6:]}"
-        out.append((date_str, float(row["DATA_VALUE"])))
-    return out
+    curr = start
+    while curr < end:
+        next_curr = min(curr + dt.timedelta(days=20), end)
+        url = (
+            f"{ECOS_BASE_URL}/{api_key}/json/kr/1/100/{ECOS_STAT_CODE}/D/"
+            f"{curr:%Y%m%d}/{next_curr:%Y%m%d}/{ECOS_ITEM_CODE}"
+        )
+        try:
+            req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+
+            if "StatisticSearch" in data and "row" in data["StatisticSearch"]:
+                for row in data["StatisticSearch"]["row"]:
+                    d = row["TIME"]  # YYYYMMDD
+                    date_str = f"{d[:4]}-{d[4:6]}-{d[6:]}"
+                    out.append((date_str, float(row["DATA_VALUE"])))
+        except Exception as e:
+            print(f"ECOS fetch chunk error ({curr} ~ {next_curr}): {e}", file=sys.stderr)
+        curr = next_curr + dt.timedelta(days=1)
+        
+    return sorted(list(set(out)), key=lambda x: x[0])
+
 
 
 def update_raw_spcx():
     """최신 SPCX 종가를 raw_spcx_price.csv에 추가합니다 (이미 있는 날짜는 건너뜀)."""
-    date_str, price, src = fetch_spcx_price()
+    series, src = fetch_spcx_prices()
     existing = load_raw_dates(RAW_SPCX_CSV_PATH)
-    if date_str in existing:
-        return None
-    row = {"date": date_str, "close_usd": round(price, 4), "source": src, "fetched_at": _now_iso()}
-    append_raw_row(RAW_SPCX_CSV_PATH, RAW_SPCX_COLUMNS, row)
-    return row
+    added = []
+    for date_str, price in series:
+        if date_str in existing:
+            continue
+        row = {"date": date_str, "close_usd": round(price, 4), "source": src, "fetched_at": _now_iso()}
+        append_raw_row(RAW_SPCX_CSV_PATH, RAW_SPCX_COLUMNS, row)
+        existing.add(date_str)
+        added.append(row)
+    return added
 
 
-def update_raw_fx(days_back=10):
+def update_raw_fx(days_back=60):
     """ECOS에서 최근 매매기준율을 가져와 raw_fx_bok.csv에 없는 날짜만 추가합니다."""
     series = fetch_fx_ecos(days_back=days_back)
     existing = load_raw_dates(RAW_FX_CSV_PATH)
@@ -141,3 +157,4 @@ def update_raw_fx(days_back=10):
         existing.add(date_str)
         added.append(row)
     return added
+

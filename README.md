@@ -10,8 +10,13 @@
   `data/daily_log.csv`(시계열 계산 결과)를 매번 다시 생성합니다 (`calc.build_daily_log()`).
   raw는 있는 그대로의 원자료, daily_log.csv는 raw로부터 항상 재현 가능한 파생 결과라는
   원칙(raw/derived, 이른바 "bronze/silver" 패턴)을 따릅니다.
-- **대시보드**: `app.py` (Streamlit)가 raw 원자료와 파생 시계열을 모두 읽어 KPI, 시계열 차트,
-  요인분해 차트, 시나리오 시뮬레이터, raw 데이터 원본 뷰를 보여줍니다.
+- **대시보드 (배포용, 정적 사이트)**: `generate_dashboard_html.py`가 raw/파생 데이터를 읽어
+  `dashboard_artifact.html`(Cowork 아티팩트용)과 `docs/index.html`(GitHub Pages 배포용)을
+  동시에 생성합니다 - **완전히 같은 화면**입니다. 서버가 필요 없는 순수 HTML+JS(Chart.js/Grid.js CDN)라서
+  `docs/index.html`을 **GitHub Pages**에 그대로 올려 공개 URL로 공유할 수 있습니다.
+  KPI 카드, 주가·환율 추이, 손익 요인분해 차트, 시나리오 슬라이더, raw 데이터 테이블을 보여줍니다.
+- **대시보드 (Streamlit 버전, 참고용)**: `app.py`도 함께 제공됩니다. 더 상세한 화면구성(요인분해 워터폴,
+  월별 손익 내역 등)을 로컬에서 보고 싶을 때 `streamlit run app.py`로 실행하세요.
 - **엑셀**: `reference/` 폴더의 기존 분석 엑셀에 `일별로그(자동갱신)` 시트를 추가해,
   엑셀로도 동일한 이력을 확인할 수 있습니다 (`export_to_excel.py`로 언제든 재생성 가능).
 
@@ -26,7 +31,9 @@
 
 ```
 apex-dashboard/
-├── app.py                     # Streamlit 대시보드
+├── app.py                     # Streamlit 대시보드 (참고용, 더 상세한 화면구성)
+├── generate_dashboard_html.py # dashboard_artifact.html + docs/index.html 동시 생성 (배포용, GitHub Pages)
+├── generate_deploy_html.py    # (대안) Streamlit 화면구성을 그대로 재현한 Plotly.js 버전 - 필요시 선택 사용
 ├── fetch_daily_data.py        # 매일 실행되는 자동 수집 스크립트 (raw 수집 -> daily_log 재생성)
 ├── sources.py                  # raw 데이터 수집 로직 (SPCX: Yahoo/stooq, FX: 한국은행 ECOS)
 ├── export_to_excel.py         # CSV -> 엑셀 '일별로그' 시트 내보내기 (선택)
@@ -38,10 +45,12 @@ apex-dashboard/
 │   ├── raw_spcx_price.csv      # raw: SpaceX 종가 원자료 (append-only)
 │   ├── raw_fx_bok.csv          # raw: USD/KRW 매매기준율 원자료, 한국은행 ECOS (append-only)
 │   └── daily_log.csv           # 파생 데이터: 위 두 raw를 날짜로 조인해 재계산한 시계열
+├── docs/
+│   └── index.html              # 배포용 정적 대시보드 (GitHub Pages가 서빙하는 파일)
 ├── reference/
 │   └── APEX펀드_SpaceX투자_손익분석.xlsx   # 6/30 기준 상세 분석 엑셀 원본
 └── .github/workflows/
-    └── daily_update.yml        # 매일 자동 실행되는 GitHub Actions
+    └── daily_update.yml        # 매일 자동 실행되는 GitHub Actions (raw 수집 + docs/index.html 재생성)
 ```
 
 ## 손익 계산 방식 (요약)
@@ -57,7 +66,7 @@ apex-dashboard/
 
 ---
 
-## 배포 가이드 (GitHub + Streamlit Community Cloud, 모두 무료)
+## 배포 가이드 (GitHub + GitHub Pages, 모두 무료)
 
 ### 1단계. GitHub 저장소 만들기
 1. https://github.com 에서 계정이 없으면 새로 만듭니다 (무료).
@@ -83,8 +92,8 @@ git push -u origin main
   새 데이터가 없으면 raw CSV에 아무 것도 추가되지 않고 커밋 없이 조용히 종료됩니다.
 - 바로 테스트해보려면 GitHub 저장소 페이지 → **Actions** 탭 → `Daily APEX/SpaceX data update`
   → **Run workflow** 버튼으로 즉시 1회 실행해볼 수 있습니다.
-- 실행 후 `data/raw_spcx_price.csv`, `data/raw_fx_bok.csv`, `data/daily_log.csv`에 새 행이
-  자동 커밋되는지 확인하세요.
+- 실행 후 `data/raw_spcx_price.csv`, `data/raw_fx_bok.csv`, `data/daily_log.csv`, `docs/index.html`이
+  자동 커밋되는지 확인하세요 (`docs/index.html`은 `generate_dashboard_html.py`가 매번 최신 데이터로 재생성합니다).
 - **(선택) 한국은행 ECOS 개인 API 키 등록** — https://ecos.bok.or.kr 에서 무료로 발급받은
   개인 인증키를 저장소 **Settings → Secrets and variables → Actions → New repository secret**에
   이름 `ECOS_API_KEY`로 등록하면 이를 사용합니다. 등록하지 않으면 공개 샘플 키(`sample`,
@@ -96,25 +105,34 @@ git push -u origin main
   `fetch_daily_data.py`의 stooq 폴백이 대신 동작하는지 봐 주세요. ECOS 조회가 실패해도(예: 휴장일)
   워크플로는 중단되지 않고 SPCX 원자료만 추가한 뒤 다음날 다시 시도합니다.
 
-### 3단계. Streamlit Community Cloud에 배포
-1. https://streamlit.io/cloud 접속 → GitHub 계정으로 로그인/가입 (무료).
-2. **New app** 클릭 → 방금 만든 저장소(`apex-spacex-dashboard`) 선택.
-3. Main file path에 `app.py` 입력 → **Deploy** 클릭.
-4. 몇 분 내로 `https://<앱이름>.streamlit.app` 형태의 공개 URL이 생성됩니다.
+### 3단계. GitHub Pages 켜기
+1. 저장소 페이지에서 **Settings → Pages**로 이동합니다.
+2. **Build and deployment → Source**를 **Deploy from a branch**로 설정합니다.
+3. **Branch**를 `main`, 폴더를 `/docs`로 선택하고 **Save**를 클릭합니다.
+4. 1~2분 내로 `https://<본인계정>.github.io/apex-spacex-dashboard/` 형태의 공개 URL이 생성됩니다.
    이 링크를 북마크해두면 매일 자동 갱신된 대시보드를 바로 확인할 수 있습니다.
-5. 데이터가 갱신된 후 대시보드에 반영되지 않으면, 앱 우측 상단 메뉴 → **Rerun** 또는
-   **Clear cache**를 눌러주세요 (대시보드는 1시간 캐시를 사용합니다, `app.py`의 `ttl=3600`).
+5. 이후 매 영업일 GitHub Actions가 `docs/index.html`을 재생성해 커밋하면, GitHub Pages가
+   자동으로 그 최신 파일을 다시 배포합니다 (별도 재배포 버튼을 누를 필요 없음).
+6. 정적 HTML이라 캐시 문제도 없습니다 (Streamlit의 `ttl=3600` 캐시와 달리, 페이지를 새로고침하면
+   Actions가 마지막으로 커밋한 최신 스냅샷이 바로 보입니다).
 
 ### 4단계. (선택) 비공개로 운영하고 싶다면
-- GitHub 저장소를 Private으로 만들어도 Streamlit Community Cloud와 연동 가능합니다
-  (Streamlit이 저장소 접근 권한을 요청하면 승인해주면 됩니다).
-- 앱 자체를 비공개로 하려면 Streamlit Cloud의 앱 설정에서 뷰어를 제한할 수 있습니다
-  (Streamlit for Teams/Enterprise 기능이 필요할 수 있음).
+- GitHub Pages는 Public 저장소에서만 무료로 제공됩니다. 비공개로 운영하려면 GitHub Team/Enterprise
+  플랜(Private 저장소 Pages 지원)이 필요하거나, Netlify/Vercel 등 비공개 배포를 지원하는 다른
+  정적 호스팅에 `docs/index.html`을 대신 올리는 방법도 있습니다 (그 경우 `generate_dashboard_html.py`가
+  만든 `docs/index.html` 하나만 있으면 되므로 호스팅사에 그대로 업로드하면 됩니다).
 
 ---
 
 ## 로컬에서 미리 보기
 
+배포용 정적 사이트를 직접 열어보려면 (브라우저에서 `docs/index.html` 파일을 더블클릭):
+```bash
+python generate_dashboard_html.py   # dashboard_artifact.html + docs/index.html 재생성
+# 그 다음 docs/index.html 을 브라우저로 열기
+```
+
+더 상세한 화면구성(Streamlit 버전)을 실행하려면:
 ```bash
 pip install -r requirements.txt
 streamlit run app.py

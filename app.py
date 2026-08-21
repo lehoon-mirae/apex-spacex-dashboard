@@ -17,24 +17,135 @@ from constants import (
 
 st.set_page_config(page_title="미래생명 APEX 펀드(SpaceX) 대시보드", layout="wide")
 
-# --- 비밀번호 인증 로직 ---
+# ------------------------------------------------------------------
+# 🔐 비밀번호 인증 게이트
+# ------------------------------------------------------------------
+CORRECT_PASSWORD = st.secrets.get("PASSWORD", "apex2026")
+
+def _login_page():
+    """비밀번호 입력 화면을 렌더링합니다."""
+    st.markdown(
+        """
+        <style>
+        /* 전체 배경 */
+        .stApp { background: linear-gradient(135deg, #0a0d1a 0%, #0f1824 50%, #0a1020 100%); }
+        /* 로그인 카드 */
+        .login-card {
+            max-width: 440px;
+            margin: 6vh auto 0 auto;
+            padding: 3rem 2.5rem 2.5rem 2.5rem;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.10);
+            border-radius: 20px;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 8px 48px rgba(0,0,0,0.5), 0 0 0 1px rgba(198,40,40,0.15);
+            text-align: center;
+        }
+        .login-logo { font-size: 3.2rem; margin-bottom: 0.3rem; }
+        .login-title {
+            font-size: 1.45rem; font-weight: 700;
+            color: #f0f4ff; letter-spacing: -0.3px;
+            margin-bottom: 0.25rem;
+        }
+        .login-sub {
+            font-size: 0.88rem; color: rgba(255,255,255,0.45);
+            margin-bottom: 2rem;
+        }
+        .login-badge {
+            display: inline-block;
+            background: rgba(198,40,40,0.18);
+            border: 1px solid rgba(198,40,40,0.35);
+            color: #ef9a9a;
+            font-size: 0.75rem; font-weight: 600;
+            padding: 3px 12px; border-radius: 20px;
+            margin-bottom: 2rem; letter-spacing: 0.5px;
+        }
+        /* Streamlit input 스타일 오버라이드 */
+        div[data-testid="stTextInput"] input {
+            background: rgba(255,255,255,0.06) !important;
+            border: 1px solid rgba(255,255,255,0.15) !important;
+            border-radius: 10px !important;
+            color: #f0f4ff !important;
+            font-size: 1rem !important;
+            padding: 0.65rem 1rem !important;
+        }
+        div[data-testid="stTextInput"] input:focus {
+            border-color: rgba(198,40,40,0.6) !important;
+            box-shadow: 0 0 0 3px rgba(198,40,40,0.12) !important;
+        }
+        div[data-testid="stButton"] button {
+            width: 100% !important;
+            background: linear-gradient(135deg, #c62828 0%, #8b1a1a 100%) !important;
+            color: #fff !important;
+            border: none !important;
+            border-radius: 10px !important;
+            font-size: 1rem !important;
+            font-weight: 600 !important;
+            padding: 0.65rem 1rem !important;
+            margin-top: 0.5rem !important;
+            transition: opacity 0.2s !important;
+        }
+        div[data-testid="stButton"] button:hover { opacity: 0.85 !important; }
+        .login-footer {
+            font-size: 0.78rem; color: rgba(255,255,255,0.25);
+            margin-top: 2rem;
+        }
+        /* 사이드바 숨기기 */
+        [data-testid="stSidebar"] { display: none !important; }
+        header { visibility: hidden; }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    st.markdown(
+        """
+        <div class="login-card">
+            <div class="login-logo">🚀</div>
+            <div class="login-title">APEX 펀드 대시보드</div>
+            <div class="login-sub">미래생명 · SpaceX 손익 분석 시스템</div>
+            <div class="login-badge">🔐 RESTRICTED ACCESS</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    # 카드 안쪽에 위치하도록 컬럼으로 중앙 정렬
+    col_l, col_c, col_r = st.columns([1, 2, 1])
+    with col_c:
+        pw = st.text_input(
+            "비밀번호",
+            type="password",
+            placeholder="비밀번호를 입력하세요",
+            label_visibility="collapsed",
+            key="pw_input",
+        )
+        login_clicked = st.button("🔓  로그인", use_container_width=True, key="login_btn")
+
+        if login_clicked or pw:
+            if pw == CORRECT_PASSWORD:
+                st.session_state["authenticated"] = True
+                st.rerun()
+            elif pw:  # 뭔가 입력하고 틀린 경우
+                st.error("❌ 비밀번호가 올바르지 않습니다.")
+
+    st.markdown(
+        "<div class='login-footer'>© 미래에셋생명 · 내부 전용 시스템</div>",
+        unsafe_allow_html=True,
+    )
+
+
+# 인증 상태 확인
 if "authenticated" not in st.session_state:
-    st.session_state.authenticated = False
+    st.session_state["authenticated"] = False
 
-if not st.session_state.authenticated:
-    st.title("🔒 대시보드 접근 권한 필요")
-    pwd = st.text_input("비밀번호를 입력하세요", type="password")
-    if st.button("확인"):
-        if pwd == "apex2026":
-            st.session_state.authenticated = True
-            st.rerun()
-        else:
-            st.error("비밀번호가 일치하지 않습니다.")
-    st.stop()
-# --------------------------
+if not st.session_state["authenticated"]:
+    _login_page()
+    st.stop()  # 이후 코드 실행 차단
+# ------------------------------------------------------------------
 
 
-@st.cache_data(ttl=300)
+@st.cache_data(ttl=3600)
 def load_data():
     df = pd.read_csv(DATA_CSV_PATH, encoding="utf-8-sig")
     df["date"] = pd.to_datetime(df["date"])
